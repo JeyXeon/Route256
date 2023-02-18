@@ -7,6 +7,7 @@ import (
 	"route256/checkout/internal/config"
 	"route256/checkout/internal/domain"
 	"route256/checkout/internal/handlers/addtocart"
+	"route256/checkout/internal/handlers/deletefromcart"
 	"route256/libs/srvwrapper"
 )
 
@@ -23,8 +24,10 @@ func main() {
 	businessLogic := domain.New(lomsClient)
 
 	addToCartHandler := addtocart.New(businessLogic)
+	deleteFromCartHandler := deletefromcart.New(businessLogic)
 
 	http.Handle("/addToCart", srvwrapper.New(addToCartHandler.Handle))
+	http.Handle("/deleteFromCart", srvwrapper.New(deleteFromCartHandler.Handle))
 
 	log.Println("listening http at", port)
 	err = http.ListenAndServe(port, nil)
