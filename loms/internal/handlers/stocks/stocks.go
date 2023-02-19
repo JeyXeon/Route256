@@ -1,7 +1,8 @@
-package stockshandler
+package stocks
 
 import (
 	"context"
+	"errors"
 	"log"
 )
 
@@ -9,8 +10,14 @@ type Request struct {
 	SKU uint32 `json:"sku"`
 }
 
+var (
+	ErrEmptySKU = errors.New("empty sku")
+)
+
 func (r Request) Validate() error {
-	// TODO: implement
+	if r.SKU == 0 {
+		return ErrEmptySKU
+	}
 	return nil
 }
 
