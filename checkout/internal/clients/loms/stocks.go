@@ -3,8 +3,9 @@ package loms
 import (
 	"context"
 	"encoding/json"
-	"github.com/pkg/errors"
 	"route256/checkout/internal/domain"
+
+	"github.com/pkg/errors"
 )
 
 type StocksRequest struct {
