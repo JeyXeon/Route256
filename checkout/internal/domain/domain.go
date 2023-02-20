@@ -2,16 +2,17 @@ package domain
 
 import "context"
 
-type StocksChecker interface {
+type LomsClient interface {
 	Stocks(ctx context.Context, sku uint32) ([]Stock, error)
+	CreateOrder(ctx context.Context, user int64, items []OrderItem) (int64, error)
 }
 
 type Model struct {
-	stocksChecker StocksChecker
+	lomsClient LomsClient
 }
 
-func New(stocksChecker StocksChecker) *Model {
+func New(stocksChecker LomsClient) *Model {
 	return &Model{
-		stocksChecker: stocksChecker,
+		lomsClient: stocksChecker,
 	}
 }
