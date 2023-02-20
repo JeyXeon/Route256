@@ -1,17 +1,23 @@
 package productservice
 
-type Client struct {
-	url   string
-	token string
+import "context"
 
-	urlGetProduct string
+type RequestProcessor interface {
+	ProcessRequest(ctx context.Context, url string, requestJson []byte) ([]byte, error)
 }
 
-func New(url string, token string) *Client {
-	return &Client{
-		url:   url,
-		token: token,
+type Client struct {
+	requestProcessor RequestProcessor
+	token            string
+}
 
-		urlGetProduct: url + "/get_product",
+const (
+	urlGetProduct = "/get_product"
+)
+
+func New(requestProcessor RequestProcessor, token string) *Client {
+	return &Client{
+		requestProcessor: requestProcessor,
+		token:            token,
 	}
 }

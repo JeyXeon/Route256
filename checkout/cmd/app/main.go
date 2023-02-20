@@ -11,6 +11,7 @@ import (
 	"route256/checkout/internal/handlers/deletefromcart"
 	"route256/checkout/internal/handlers/listcart"
 	"route256/checkout/internal/handlers/purchase"
+	"route256/libs/requestprocessor"
 	"route256/libs/srvwrapper"
 )
 
@@ -22,8 +23,11 @@ func main() {
 		log.Fatal("config init", err)
 	}
 
-	lomsClient := loms.New(config.ConfigData.Services.Loms)
-	productServiceClient := productservice.New(config.ConfigData.Services.ProductService, config.ConfigData.Token)
+	lomsRequestProcessor := requestprocessor.New(config.ConfigData.Services.Loms)
+	productServiceRequestProcessor := requestprocessor.New(config.ConfigData.Services.ProductService)
+
+	lomsClient := loms.New(lomsRequestProcessor)
+	productServiceClient := productservice.New(productServiceRequestProcessor, config.ConfigData.Token)
 
 	businessLogic := domain.New(lomsClient, productServiceClient)
 

@@ -1,12 +1,9 @@
 package loms
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
-	"net/http"
 	"route256/checkout/internal/domain"
 )
 
@@ -27,23 +24,13 @@ func (c *Client) CreateOrder(ctx context.Context, user int64, items []domain.Ord
 		return 0, errors.Wrap(err, "marshaling json")
 	}
 
-	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, c.urlCreateOrder, bytes.NewBuffer(rawJSON))
+	responseJson, err := c.lomsRequestProcessor.ProcessRequest(ctx, urlCreateOrder, rawJSON)
 	if err != nil {
-		return 0, errors.Wrap(err, "creating http request")
-	}
-
-	httpResponse, err := http.DefaultClient.Do(httpRequest)
-	if err != nil {
-		return 0, errors.Wrap(err, "calling http")
-	}
-	defer httpResponse.Body.Close()
-
-	if httpResponse.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("wrong status code: %d", httpResponse.StatusCode)
+		return 0, errors.Wrap(err, "processing request")
 	}
 
 	var response CreateOrderResponse
-	err = json.NewDecoder(httpResponse.Body).Decode(&response)
+	err = json.Unmarshal(responseJson, &response)
 	if err != nil {
 		return 0, errors.Wrap(err, "decoding json")
 	}

@@ -1,12 +1,9 @@
 package productservice
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
-	"net/http"
 	"route256/checkout/internal/domain"
 )
 
@@ -28,23 +25,13 @@ func (c *Client) GetProduct(ctx context.Context, SKU uint32) (domain.Product, er
 		return domain.Product{}, errors.Wrap(err, "marshaling json")
 	}
 
-	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, c.urlGetProduct, bytes.NewBuffer(rawJSON))
+	responseJson, err := c.requestProcessor.ProcessRequest(ctx, urlGetProduct, rawJSON)
 	if err != nil {
-		return domain.Product{}, errors.Wrap(err, "creating http request")
-	}
-
-	httpResponse, err := http.DefaultClient.Do(httpRequest)
-	if err != nil {
-		return domain.Product{}, errors.Wrap(err, "calling http")
-	}
-	defer httpResponse.Body.Close()
-
-	if httpResponse.StatusCode != http.StatusOK {
-		return domain.Product{}, fmt.Errorf("wrong status code: %d", httpResponse.StatusCode)
+		return domain.Product{}, errors.Wrap(err, "processing request")
 	}
 
 	var response GetProductResponse
-	err = json.NewDecoder(httpResponse.Body).Decode(&response)
+	err = json.Unmarshal(responseJson, &response)
 	if err != nil {
 		return domain.Product{}, errors.Wrap(err, "decoding json")
 	}

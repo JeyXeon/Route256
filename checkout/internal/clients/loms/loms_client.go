@@ -1,17 +1,22 @@
 package loms
 
-type Client struct {
-	url string
+import "context"
 
-	urlStocks      string
-	urlCreateOrder string
+type LomsRequestProcessor interface {
+	ProcessRequest(ctx context.Context, url string, requestJson []byte) ([]byte, error)
 }
 
-func New(url string) *Client {
-	return &Client{
-		url: url,
+type Client struct {
+	lomsRequestProcessor LomsRequestProcessor
+}
 
-		urlStocks:      url + "/stocks",
-		urlCreateOrder: url + "/createOrder",
+const (
+	urlStocks      = "/stocks"
+	urlCreateOrder = "/createOrder"
+)
+
+func New(lomsRequestProcessor LomsRequestProcessor) *Client {
+	return &Client{
+		lomsRequestProcessor: lomsRequestProcessor,
 	}
 }
