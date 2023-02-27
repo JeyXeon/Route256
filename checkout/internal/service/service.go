@@ -1,4 +1,4 @@
-package domain
+package service
 
 import "context"
 
@@ -11,13 +11,13 @@ type ProductServiceClient interface {
 	GetProduct(ctx context.Context, sku uint32) (Product, error)
 }
 
-type Model struct {
+type Service struct {
 	lomsClient           LomsClient
 	productServiceClient ProductServiceClient
 }
 
-func New(stocksChecker LomsClient, productServiceClient ProductServiceClient) *Model {
-	return &Model{
+func New(stocksChecker LomsClient, productServiceClient ProductServiceClient) *Service {
+	return &Service{
 		lomsClient:           stocksChecker,
 		productServiceClient: productServiceClient,
 	}

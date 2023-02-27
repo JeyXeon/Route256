@@ -1,4 +1,4 @@
-package domain
+package service
 
 import (
 	"context"
@@ -15,7 +15,7 @@ var (
 	ErrInsufficientStocks = errors.New("insufficient stocks")
 )
 
-func (m *Model) AddToCart(ctx context.Context, user int64, sku uint32, count uint16) error {
+func (m *Service) AddToCart(ctx context.Context, user int64, sku uint32, count uint32) error {
 	stocks, err := m.lomsClient.Stocks(ctx, sku)
 	if err != nil {
 		return errors.WithMessage(err, "checking stocks")

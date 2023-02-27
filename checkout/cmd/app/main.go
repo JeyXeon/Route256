@@ -1,18 +1,18 @@
 package main
 
 import (
+	"fmt"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"log"
-	"net/http"
+	"net"
+	checkout "route256/checkout/internal/api"
 	"route256/checkout/internal/clients/loms"
 	"route256/checkout/internal/clients/productservice"
 	"route256/checkout/internal/config"
-	"route256/checkout/internal/domain"
-	"route256/checkout/internal/handlers/addtocart"
-	"route256/checkout/internal/handlers/deletefromcart"
-	"route256/checkout/internal/handlers/listcart"
-	"route256/checkout/internal/handlers/purchase"
+	"route256/checkout/internal/service"
+	desc "route256/checkout/pkg"
 	"route256/libs/requestprocessor"
-	"route256/libs/srvwrapper"
 )
 
 func main() {
@@ -21,27 +21,30 @@ func main() {
 		log.Fatal("config init", err)
 	}
 
+	port := config.ConfigData.Port
+
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s", port))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	s := grpc.NewServer()
+	reflection.Register(s)
+
 	lomsRequestProcessor := requestprocessor.New(config.ConfigData.Services.Loms)
 	productServiceRequestProcessor := requestprocessor.New(config.ConfigData.Services.ProductService)
 
 	lomsClient := loms.New(lomsRequestProcessor)
 	productServiceClient := productservice.New(productServiceRequestProcessor, config.ConfigData.Token)
 
-	businessLogic := domain.New(lomsClient, productServiceClient)
+	checkoutService := service.New(lomsClient, productServiceClient)
 
-	addToCartHandler := addtocart.New(businessLogic)
-	deleteFromCartHandler := deletefromcart.New(businessLogic)
-	purchaseHandler := purchase.New(businessLogic)
-	listCartHandler := listcart.New(businessLogic)
+	desc.RegisterCheckoutServer(s, checkout.NewCheckout(checkoutService))
 
-	http.Handle("/addToCart", srvwrapper.New(addToCartHandler.Handle))
-	http.Handle("/deleteFromCart", srvwrapper.New(deleteFromCartHandler.Handle))
-	http.Handle("/purchase", srvwrapper.New(purchaseHandler.Handle))
-	http.Handle("/listCart", srvwrapper.New(listCartHandler.Handle))
+	log.Printf("server listening at %v", lis.Addr())
 
-	port := config.ConfigData.Port
+	if err = s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 
-	log.Println("listening http at", port)
-	err = http.ListenAndServe(port, nil)
-	log.Fatal("cannot listen http", err)
 }
