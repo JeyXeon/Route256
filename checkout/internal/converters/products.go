@@ -1,11 +1,11 @@
 package converters
 
 import (
-	"route256/checkout/internal/service"
+	"route256/checkout/internal/model"
 	desc "route256/checkout/pkg"
 )
 
-func ToProductListDesc(products []*service.Product) []*desc.Product {
+func ToProductListDesc(products []*model.Product) []*desc.Product {
 	if products == nil {
 		return nil
 	}
@@ -19,7 +19,7 @@ func ToProductListDesc(products []*service.Product) []*desc.Product {
 	return result
 }
 
-func ToProductDesc(product *service.Product) *desc.Product {
+func ToProductDesc(product *model.Product) *desc.Product {
 	if product == nil {
 		return nil
 	}

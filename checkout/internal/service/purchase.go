@@ -2,21 +2,17 @@ package service
 
 import (
 	"context"
+	"route256/checkout/internal/model"
 
 	"github.com/pkg/errors"
 )
-
-type OrderItem struct {
-	SKU   int32  `json:"sku"`
-	Count uint16 `json:"count"`
-}
 
 var (
 	ErrInsufficientOrder = errors.New("insufficient order")
 )
 
 func (m *Service) Purchase(ctx context.Context, user int64) (int64, error) {
-	orderId, err := m.lomsClient.CreateOrder(ctx, user, []OrderItem{{
+	orderId, err := m.lomsClient.CreateOrder(ctx, user, []model.OrderItem{{
 		SKU:   5,
 		Count: 3,
 	}})
