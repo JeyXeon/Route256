@@ -1,5 +1,5 @@
 CURDIR=$(shell pwd)
-BINDIR=${CURDIR}/bin
+BINDIR=./bin
 GOVER=$(shell go version | perl -nle '/(go\d\S+)/; print $$1;')
 SMARTIMPORTS=${BINDIR}/smartimports_${GOVER}
 LINTVER=v1.51.1
