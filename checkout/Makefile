@@ -39,19 +39,33 @@ install-smartimports: bindir
 		(GOBIN=${BINDIR} go install github.com/pav5000/smartimports/cmd/smartimports@latest && \
 		mv ${BINDIR}/smartimports ${SMARTIMPORTS})
 
-install-go-deps:
-	GOBIN=$(BINDIR) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
-	GOBIN=$(BINDIR) go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-
 get-go-deps:
 	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
 	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
-generate:
-	mkdir -p pkg
-	protoc -I api \
-	--go_out=pkg --go_opt=paths=source_relative \
-	--plugin=protoc-gen-go=bin/protoc-gen-go \
-	--go-grpc_out=pkg --go-grpc_opt=paths=source_relative \
-	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
-	api/service.proto
+install-go-deps:
+	GOBIN=$(BINDIR) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
+	GOBIN=$(BINDIR) go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+
+generate: get-go-deps install-go-deps
+	mkdir -p pkg/checkout
+	protoc -I $(APIDIR)/checkout \
+		--go_out=pkg/checkout --go_opt=paths=source_relative \
+		--plugin=protoc-gen-go=bin/protoc-gen-go \
+		--go-grpc_out=pkg/checkout --go-grpc_opt=paths=source_relative \
+		--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+		$(APIDIR)/checkout/checkout.proto
+	mkdir -p pkg/productservice
+	protoc -I $(APIDIR)/productservice \
+		--go_out=pkg/productservice --go_opt=paths=source_relative \
+		--plugin=protoc-gen-go=bin/protoc-gen-go \
+		--go-grpc_out=pkg/productservice --go-grpc_opt=paths=source_relative \
+		--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+		$(APIDIR)/productservice/productservice.proto
+	mkdir -p pkg/loms
+	protoc -I $(APIDIR)/loms \
+		--go_out=pkg/loms --go_opt=paths=source_relative \
+		--plugin=protoc-gen-go=bin/protoc-gen-go \
+		--go-grpc_out=pkg/loms --go-grpc_opt=paths=source_relative \
+		--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+		$(APIDIR)/loms/loms.proto
