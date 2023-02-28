@@ -1,6 +1,6 @@
 package model
 
 type OrderItem struct {
-	SKU   int32
-	Count uint16
+	SKU   uint32
+	Count uint32
 }

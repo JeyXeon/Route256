@@ -4,7 +4,7 @@ import (
 	"context"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
-	desc "route256/checkout/pkg"
+	desc "route256/checkout/pkg/checkout"
 )
 
 func (i *Implementation) DeleteFromCart(ctx context.Context, req *desc.DeleteFromCartRequest) (*emptypb.Empty, error) {

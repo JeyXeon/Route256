@@ -8,7 +8,7 @@ import (
 	"net"
 	loms "route256/loms/internal/api"
 	"route256/loms/internal/config"
-	desc "route256/loms/pkg"
+	desc "route256/loms/pkg/loms"
 )
 
 func main() {

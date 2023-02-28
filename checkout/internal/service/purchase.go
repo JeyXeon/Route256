@@ -12,7 +12,7 @@ var (
 )
 
 func (m *Service) Purchase(ctx context.Context, user int64) (int64, error) {
-	orderId, err := m.lomsClient.CreateOrder(ctx, user, []model.OrderItem{{
+	orderId, err := m.lomsClient.CreateOrder(ctx, user, []*model.OrderItem{{
 		SKU:   5,
 		Count: 3,
 	}})

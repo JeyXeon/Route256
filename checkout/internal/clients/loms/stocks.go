@@ -2,51 +2,28 @@ package loms
 
 import (
 	"context"
-	"encoding/json"
-	"route256/checkout/internal/domain"
-
-	"github.com/pkg/errors"
+	"route256/checkout/internal/model"
+	lomsapi "route256/checkout/pkg/loms"
 )
 
-type StocksRequest struct {
-	SKU uint32 `json:"sku"`
-}
-
-type StocksItem struct {
-	WarehouseID int64  `json:"warehouseID"`
-	Count       uint64 `json:"count"`
-}
-
-type StocksResponse struct {
-	Stocks []StocksItem `json:"stocks"`
-}
-
-func (c *Client) Stocks(ctx context.Context, sku uint32) ([]domain.Stock, error) {
-	request := StocksRequest{SKU: sku}
-
-	rawJSON, err := json.Marshal(request)
-	if err != nil {
-		return nil, errors.Wrap(err, "marshaling json")
+func (c *client) Stocks(ctx context.Context, sku uint32) ([]*model.Stock, error) {
+	req := &lomsapi.StocksRequest{
+		Sku: sku,
 	}
 
-	responseJson, err := c.lomsRequestProcessor.ProcessRequest(ctx, urlStocks, rawJSON)
+	res, err := c.lomsClient.Stocks(ctx, req)
 	if err != nil {
-		return nil, errors.Wrap(err, "processing request")
+		return nil, err
 	}
 
-	var response StocksResponse
-	err = json.Unmarshal(responseJson, &response)
-	if err != nil {
-		return nil, errors.Wrap(err, "decoding json")
-	}
-
-	stocks := make([]domain.Stock, 0, len(response.Stocks))
-	for _, stock := range response.Stocks {
-		stocks = append(stocks, domain.Stock{
-			WarehouseID: stock.WarehouseID,
+	stocks := make([]*model.Stock, 0, len(res.GetStocks()))
+	for _, stock := range res.GetStocks() {
+		stocks = append(stocks, &model.Stock{
+			WarehouseID: stock.WarehouseId,
 			Count:       stock.Count,
 		})
 	}
 
 	return stocks, nil
+
 }

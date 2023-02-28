@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
@@ -11,8 +12,9 @@ import (
 	"route256/checkout/internal/clients/productservice"
 	"route256/checkout/internal/config"
 	"route256/checkout/internal/service"
-	desc "route256/checkout/pkg"
-	"route256/libs/requestprocessor"
+	desc "route256/checkout/pkg/checkout"
+	lomsapi "route256/checkout/pkg/loms"
+	productserviceapi "route256/checkout/pkg/productservice"
 )
 
 func main() {
@@ -31,11 +33,20 @@ func main() {
 	s := grpc.NewServer()
 	reflection.Register(s)
 
-	lomsRequestProcessor := requestprocessor.New(config.ConfigData.Services.Loms)
-	productServiceRequestProcessor := requestprocessor.New(config.ConfigData.Services.ProductService)
+	lomsConn, err := grpc.Dial(config.ConfigData.Services.Loms, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect to server: %v", err)
+	}
+	defer lomsConn.Close()
 
-	lomsClient := loms.New(lomsRequestProcessor)
-	productServiceClient := productservice.New(productServiceRequestProcessor, config.ConfigData.Token)
+	productServiceConn, err := grpc.Dial(config.ConfigData.Services.ProductService, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect to server: %v", err)
+	}
+	defer productServiceConn.Close()
+
+	lomsClient := loms.New(lomsapi.NewLomsClient(lomsConn))
+	productServiceClient := productservice.New(productserviceapi.NewProductServiceClient(productServiceConn), config.ConfigData.Token)
 
 	checkoutService := service.New(lomsClient, productServiceClient)
 

@@ -2,39 +2,23 @@ package loms
 
 import (
 	"context"
-	"encoding/json"
-	"route256/checkout/internal/domain"
-
-	"github.com/pkg/errors"
+	"route256/checkout/internal/converters"
+	"route256/checkout/internal/model"
+	lomsapi "route256/checkout/pkg/loms"
 )
 
-type CreateOrderRequest struct {
-	User  int64              `json:"user"`
-	Items []domain.OrderItem `json:"items"`
-}
-
-type CreateOrderResponse struct {
-	OrderId int64 `json:"orderId"`
-}
-
-func (c *Client) CreateOrder(ctx context.Context, user int64, items []domain.OrderItem) (int64, error) {
-	request := CreateOrderRequest{User: user, Items: items}
-
-	rawJSON, err := json.Marshal(request)
-	if err != nil {
-		return 0, errors.Wrap(err, "marshaling json")
+func (c *client) CreateOrder(ctx context.Context, user int64, items []*model.OrderItem) (int64, error) {
+	orderItems := converters.ToOrderItemListLomsApi(items)
+	req := &lomsapi.CreateOrderRequest{
+		User:  user,
+		Items: orderItems,
 	}
 
-	responseJson, err := c.lomsRequestProcessor.ProcessRequest(ctx, urlCreateOrder, rawJSON)
+	res, err := c.lomsClient.CreateOrder(ctx, req)
 	if err != nil {
-		return 0, errors.Wrap(err, "processing request")
+		return 0, err
 	}
 
-	var response CreateOrderResponse
-	err = json.Unmarshal(responseJson, &response)
-	if err != nil {
-		return 0, errors.Wrap(err, "decoding json")
-	}
+	return res.GetOrderID(), nil
 
-	return response.OrderId, nil
 }

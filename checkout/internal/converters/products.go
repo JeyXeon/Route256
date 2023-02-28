@@ -2,7 +2,7 @@ package converters
 
 import (
 	"route256/checkout/internal/model"
-	desc "route256/checkout/pkg"
+	desc "route256/checkout/pkg/checkout"
 )
 
 func ToProductListDesc(products []*model.Product) []*desc.Product {

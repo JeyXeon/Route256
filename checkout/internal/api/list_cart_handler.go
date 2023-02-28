@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"route256/checkout/internal/converters"
-	desc "route256/checkout/pkg"
+	desc "route256/checkout/pkg/checkout"
 )
 
 func (i *Implementation) ListCart(ctx context.Context, req *desc.ListCartRequest) (*desc.ListCartResponse, error) {

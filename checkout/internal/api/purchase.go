@@ -3,7 +3,7 @@ package checkout
 import (
 	"context"
 	"log"
-	desc "route256/checkout/pkg"
+	desc "route256/checkout/pkg/checkout"
 )
 
 func (i *Implementation) Purchase(ctx context.Context, req *desc.PurchaseRequest) (*desc.PurchaseResponse, error) {

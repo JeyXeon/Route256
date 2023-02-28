@@ -17,7 +17,7 @@ func (m *Service) ListCart(ctx context.Context, user int64) (model.Cart, error) 
 		if err != nil {
 			return model.Cart{Items: []*model.Product{}, TotalPrice: 0}, errors.WithMessage(err, "getting product")
 		}
-		items = append(items, &product)
+		items = append(items, product)
 		totalPrice += product.Price * product.Count
 	}
 

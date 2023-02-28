@@ -2,7 +2,7 @@ package checkout
 
 import (
 	"route256/checkout/internal/service"
-	desc "route256/checkout/pkg"
+	desc "route256/checkout/pkg/checkout"
 )
 
 type Implementation struct {

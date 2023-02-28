@@ -1,7 +1,7 @@
 package loms
 
 import (
-	desc "route256/loms/pkg"
+	desc "route256/loms/pkg/loms"
 )
 
 type Implementation struct {

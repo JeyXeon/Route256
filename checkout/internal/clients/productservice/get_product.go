@@ -2,40 +2,25 @@ package productservice
 
 import (
 	"context"
-	"encoding/json"
-	"route256/checkout/internal/domain"
-
-	"github.com/pkg/errors"
+	"route256/checkout/internal/model"
+	productserviceapi "route256/checkout/pkg/productservice"
 )
 
-type GetProductRequest struct {
-	Token string `json:"token"`
-	SKU   uint32 `json:"sku"`
-}
-
-type GetProductResponse struct {
-	Name  string `json:"name"`
-	Price uint32 `json:"price"`
-}
-
-func (c *Client) GetProduct(ctx context.Context, SKU uint32) (domain.Product, error) {
-	request := GetProductRequest{Token: c.token, SKU: SKU}
-
-	rawJSON, err := json.Marshal(request)
-	if err != nil {
-		return domain.Product{}, errors.Wrap(err, "marshaling json")
+func (c *client) GetProduct(ctx context.Context, SKU uint32) (*model.Product, error) {
+	req := &productserviceapi.GetProductRequest{
+		Token: c.token,
+		Sku:   SKU,
 	}
 
-	responseJson, err := c.requestProcessor.ProcessRequest(ctx, urlGetProduct, rawJSON)
+	res, err := c.productServiceClient.GetProduct(ctx, req)
 	if err != nil {
-		return domain.Product{}, errors.Wrap(err, "processing request")
+		return nil, err
 	}
 
-	var response GetProductResponse
-	err = json.Unmarshal(responseJson, &response)
-	if err != nil {
-		return domain.Product{}, errors.Wrap(err, "decoding json")
-	}
-
-	return domain.Product{SKU: SKU, Count: 1, Name: response.Name, Price: response.Price}, nil
+	return &model.Product{
+		SKU:   SKU,
+		Count: 1,
+		Name:  res.GetName(),
+		Price: res.GetPrice(),
+	}, nil
 }

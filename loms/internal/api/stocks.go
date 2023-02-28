@@ -3,7 +3,7 @@ package loms
 import (
 	"context"
 	"log"
-	desc "route256/loms/pkg"
+	desc "route256/loms/pkg/loms"
 )
 
 func (i *Implementation) Stocks(ctx context.Context, req *desc.StocksRequest) (*desc.StocksResponse, error) {
