@@ -16,7 +16,7 @@ func (i *Implementation) ListOrder(ctx context.Context, req *desc.ListOrderReque
 	return &desc.ListOrderResponse{
 		Status: "new",
 		User:   5,
-		Items: []*desc.Item{
+		Items: []*desc.OrderItem{
 			{
 				Sku:   12,
 				Count: 5,

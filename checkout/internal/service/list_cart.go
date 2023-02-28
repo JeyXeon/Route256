@@ -15,7 +15,10 @@ func (m *Service) ListCart(ctx context.Context, user int64) (model.Cart, error) 
 	for _, sku := range skus {
 		product, err := m.productServiceClient.GetProduct(ctx, sku)
 		if err != nil {
-			return model.Cart{Items: []*model.Product{}, TotalPrice: 0}, errors.WithMessage(err, "getting product")
+			return model.Cart{
+				Items:      []*model.Product{},
+				TotalPrice: 0,
+			}, errors.WithMessage(err, "getting product")
 		}
 		items = append(items, product)
 		totalPrice += product.Price * product.Count

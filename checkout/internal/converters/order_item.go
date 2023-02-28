@@ -5,12 +5,12 @@ import (
 	lomsapi "route256/checkout/pkg/loms"
 )
 
-func ToOrderItemListLomsApi(orderItems []*model.OrderItem) []*lomsapi.Item {
+func ToOrderItemListLomsApi(orderItems []*model.OrderItem) []*lomsapi.OrderItem {
 	if orderItems == nil {
 		return nil
 	}
 
-	result := make([]*lomsapi.Item, 0, len(orderItems))
+	result := make([]*lomsapi.OrderItem, 0, len(orderItems))
 	for _, i := range orderItems {
 		item := ToOrderItemLomsApi(i)
 		result = append(result, item)
@@ -19,12 +19,12 @@ func ToOrderItemListLomsApi(orderItems []*model.OrderItem) []*lomsapi.Item {
 	return result
 }
 
-func ToOrderItemLomsApi(orderItem *model.OrderItem) *lomsapi.Item {
+func ToOrderItemLomsApi(orderItem *model.OrderItem) *lomsapi.OrderItem {
 	if orderItem == nil {
 		return nil
 	}
 
-	return &lomsapi.Item{
+	return &lomsapi.OrderItem{
 		Sku:   orderItem.SKU,
 		Count: orderItem.Count,
 	}
