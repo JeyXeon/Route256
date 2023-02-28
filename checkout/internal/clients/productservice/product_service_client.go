@@ -2,8 +2,9 @@ package productservice
 
 import (
 	"context"
-	"google.golang.org/grpc"
 	productserviceapi "route256/checkout/pkg/productservice"
+
+	"google.golang.org/grpc"
 )
 
 type ProductServiceClient interface {

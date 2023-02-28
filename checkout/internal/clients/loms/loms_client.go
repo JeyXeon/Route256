@@ -2,8 +2,9 @@ package loms
 
 import (
 	"context"
-	"google.golang.org/grpc"
 	lomsapi "route256/checkout/pkg/loms"
+
+	"google.golang.org/grpc"
 )
 
 type LomsClient interface {

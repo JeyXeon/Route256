@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	loms "route256/loms/internal/api"
 	"route256/loms/internal/config"
 	desc "route256/loms/pkg/loms"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 
 	port := config.ConfigData.Port
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s", port))
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

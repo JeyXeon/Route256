@@ -2,9 +2,10 @@ package checkout
 
 import (
 	"context"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
 	desc "route256/checkout/pkg/checkout"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (i *Implementation) AddToCart(ctx context.Context, req *desc.AddToCartRequest) (*emptypb.Empty, error) {
