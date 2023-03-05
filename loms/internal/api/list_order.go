@@ -4,11 +4,17 @@ import (
 	"context"
 	"log"
 	desc "route256/loms/pkg/loms"
+
+	"github.com/pkg/errors"
+)
+
+var (
+	ErrListOrderEmptyOrder = errors.New("empty order")
 )
 
 func (i *Implementation) ListOrder(ctx context.Context, req *desc.ListOrderRequest) (*desc.ListOrderResponse, error) {
 	if req.OrderID == 0 {
-		return nil, ErrEmptyOrder
+		return nil, ErrListOrderEmptyOrder
 	}
 
 	log.Printf("listOrder: %+v", req)

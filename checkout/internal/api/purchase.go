@@ -4,11 +4,17 @@ import (
 	"context"
 	"log"
 	desc "route256/checkout/pkg/checkout"
+
+	"github.com/pkg/errors"
+)
+
+var (
+	ErrPurchaseEmptyUser = errors.New("empty user")
 )
 
 func (i *Implementation) Purchase(ctx context.Context, req *desc.PurchaseRequest) (*desc.PurchaseResponse, error) {
 	if req.User == 0 {
-		return nil, ErrEmptyUser
+		return nil, ErrPurchaseEmptyUser
 	}
 
 	log.Printf("purchase: %+v", req)

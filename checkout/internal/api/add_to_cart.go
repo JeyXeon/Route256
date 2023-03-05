@@ -5,15 +5,21 @@ import (
 	"log"
 	desc "route256/checkout/pkg/checkout"
 
+	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
+)
+
+var (
+	ErrAddToCartEmptyUser = errors.New("empty user")
+	ErrAddToCartEmptySKU  = errors.New("empty sku")
 )
 
 func (i *Implementation) AddToCart(ctx context.Context, req *desc.AddToCartRequest) (*emptypb.Empty, error) {
 	if req.User == 0 {
-		return &emptypb.Empty{}, ErrEmptyUser
+		return &emptypb.Empty{}, ErrAddToCartEmptyUser
 	}
 	if req.Sku == 0 {
-		return &emptypb.Empty{}, ErrEmptySKU
+		return &emptypb.Empty{}, ErrAddToCartEmptySKU
 	}
 
 	log.Printf("addToCart: %+v", req)
