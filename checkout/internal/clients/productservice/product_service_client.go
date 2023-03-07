@@ -1,23 +1,24 @@
 package productservice
 
-import "context"
+import (
+	"context"
+	productserviceapi "route256/checkout/pkg/productservice"
 
-type RequestProcessor interface {
-	ProcessRequest(ctx context.Context, url string, requestJson []byte) ([]byte, error)
-}
-
-type Client struct {
-	requestProcessor RequestProcessor
-	token            string
-}
-
-const (
-	urlGetProduct = "/get_product"
+	"google.golang.org/grpc"
 )
 
-func New(requestProcessor RequestProcessor, token string) *Client {
-	return &Client{
-		requestProcessor: requestProcessor,
-		token:            token,
+type ProductServiceClient interface {
+	GetProduct(ctx context.Context, in *productserviceapi.GetProductRequest, opts ...grpc.CallOption) (*productserviceapi.GetProductResponse, error)
+}
+
+type client struct {
+	productServiceClient ProductServiceClient
+	token                string
+}
+
+func New(productServiceClient ProductServiceClient, token string) *client {
+	return &client{
+		productServiceClient: productServiceClient,
+		token:                token,
 	}
 }

@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package checkout;
+
+option go_package = "route256/checkout;checkout";
+
+import "google/protobuf/empty.proto";
+
+service Checkout {
+  rpc AddToCart (AddToCartRequest) returns (google.protobuf.Empty);
+  rpc DeleteFromCart (DeleteFromCartRequest) returns (google.protobuf.Empty);
+  rpc ListCart (ListCartRequest) returns (ListCartResponse);
+  rpc Purchase (PurchaseRequest) returns (PurchaseResponse);
+}
+
+message AddToCartRequest {
+  int64 user = 1;
+  uint32 sku = 2;
+  uint32 count = 3;
+}
+
+message DeleteFromCartRequest {
+  int64 user = 1;
+  uint32 sku = 2;
+  uint32 count = 3;
+}
+
+message ListCartRequest {
+  int64 user = 1;
+}
+
+message Product {
+  uint32 sku = 1;
+  uint32 count = 2;
+  string name = 3;
+  uint32 price = 4;
+
+}
+
+message ListCartResponse {
+  repeated Product items = 1;
+  uint32 totalPrice = 2;
+}
+
+message PurchaseRequest {
+  int64 user = 1;
+}
+
+message PurchaseResponse {
+  int64 orderID = 1;
+}

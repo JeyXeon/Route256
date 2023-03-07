@@ -1,22 +1,23 @@
 package loms
 
-import "context"
+import (
+	"context"
+	lomsapi "route256/checkout/pkg/loms"
 
-type LomsRequestProcessor interface {
-	ProcessRequest(ctx context.Context, url string, requestJson []byte) ([]byte, error)
-}
-
-type Client struct {
-	lomsRequestProcessor LomsRequestProcessor
-}
-
-const (
-	urlStocks      = "/stocks"
-	urlCreateOrder = "/createOrder"
+	"google.golang.org/grpc"
 )
 
-func New(lomsRequestProcessor LomsRequestProcessor) *Client {
-	return &Client{
-		lomsRequestProcessor: lomsRequestProcessor,
+type LomsClient interface {
+	Stocks(ctx context.Context, in *lomsapi.StocksRequest, opts ...grpc.CallOption) (*lomsapi.StocksResponse, error)
+	CreateOrder(ctx context.Context, in *lomsapi.CreateOrderRequest, opts ...grpc.CallOption) (*lomsapi.CreateOrderResponse, error)
+}
+
+type client struct {
+	lomsClient LomsClient
+}
+
+func New(lomsClient LomsClient) *client {
+	return &client{
+		lomsClient: lomsClient,
 	}
 }

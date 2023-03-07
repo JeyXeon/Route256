@@ -2,17 +2,19 @@ package main
 
 import (
 	"log"
-	"net/http"
+	"net"
+	checkout "route256/checkout/internal/api"
 	"route256/checkout/internal/clients/loms"
 	"route256/checkout/internal/clients/productservice"
 	"route256/checkout/internal/config"
-	"route256/checkout/internal/domain"
-	"route256/checkout/internal/handlers/addtocart"
-	"route256/checkout/internal/handlers/deletefromcart"
-	"route256/checkout/internal/handlers/listcart"
-	"route256/checkout/internal/handlers/purchase"
-	"route256/libs/requestprocessor"
-	"route256/libs/srvwrapper"
+	"route256/checkout/internal/service"
+	desc "route256/checkout/pkg/checkout"
+	lomsapi "route256/checkout/pkg/loms"
+	productserviceapi "route256/checkout/pkg/productservice"
+	"route256/libs/clientconnwrapper"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -21,27 +23,40 @@ func main() {
 		log.Fatal("config init", err)
 	}
 
-	lomsRequestProcessor := requestprocessor.New(config.ConfigData.Services.Loms)
-	productServiceRequestProcessor := requestprocessor.New(config.ConfigData.Services.ProductService)
-
-	lomsClient := loms.New(lomsRequestProcessor)
-	productServiceClient := productservice.New(productServiceRequestProcessor, config.ConfigData.Token)
-
-	businessLogic := domain.New(lomsClient, productServiceClient)
-
-	addToCartHandler := addtocart.New(businessLogic)
-	deleteFromCartHandler := deletefromcart.New(businessLogic)
-	purchaseHandler := purchase.New(businessLogic)
-	listCartHandler := listcart.New(businessLogic)
-
-	http.Handle("/addToCart", srvwrapper.New(addToCartHandler.Handle))
-	http.Handle("/deleteFromCart", srvwrapper.New(deleteFromCartHandler.Handle))
-	http.Handle("/purchase", srvwrapper.New(purchaseHandler.Handle))
-	http.Handle("/listCart", srvwrapper.New(listCartHandler.Handle))
-
 	port := config.ConfigData.Port
 
-	log.Println("listening http at", port)
-	err = http.ListenAndServe(port, nil)
-	log.Fatal("cannot listen http", err)
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	s := grpc.NewServer()
+	reflection.Register(s)
+
+	lomsConn, err := clientconnwrapper.GetConn(config.ConfigData.Services.Loms)
+	if err != nil {
+		log.Fatalf("failed to connect to server: %v", err)
+	}
+	defer lomsConn.Close()
+
+	productServiceConn, err := clientconnwrapper.GetConn(config.ConfigData.Services.ProductService)
+	if err != nil {
+		log.Fatalf("failed to connect to server: %v", err)
+	}
+	defer productServiceConn.Close()
+
+	token := config.ConfigData.Token
+	lomsClient := loms.New(lomsapi.NewLomsClient(lomsConn))
+	productServiceClient := productservice.New(productserviceapi.NewProductServiceClient(productServiceConn), token)
+
+	checkoutService := service.New(lomsClient, productServiceClient)
+
+	desc.RegisterCheckoutServer(s, checkout.NewCheckout(checkoutService))
+
+	log.Printf("server listening at %v", lis.Addr())
+
+	if err = s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
 }

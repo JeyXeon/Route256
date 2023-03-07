@@ -1,3 +1,5 @@
+CURDIR=$(shell pwd)
+APIDIR=$(CURDIR)/api
 
 build-all:
 	cd checkout && GOOS=linux make build
@@ -11,3 +13,8 @@ precommit:
 	cd checkout && make precommit
 	cd loms && make precommit
 	cd notifications && make precommit
+
+generate-all:
+	cd checkout && make generate APIDIR=$(APIDIR)
+	cd loms && make generate APIDIR=$(APIDIR)
+
