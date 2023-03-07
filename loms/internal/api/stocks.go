@@ -5,11 +5,12 @@ import (
 	"log"
 	desc "route256/loms/pkg/loms"
 
-	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
-	ErrStocksEmptySKU = errors.New("empty sku")
+	ErrStocksEmptySKU = status.Error(codes.InvalidArgument, "empty sku")
 )
 
 func (i *Implementation) Stocks(ctx context.Context, req *desc.StocksRequest) (*desc.StocksResponse, error) {

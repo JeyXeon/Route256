@@ -6,11 +6,12 @@ import (
 	desc "route256/loms/pkg/loms"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
-	ErrCancelOrderEmptyOrder = errors.New("empty order")
+	ErrCancelOrderEmptyOrder = status.Error(codes.InvalidArgument, "empty order")
 )
 
 func (i *Implementation) CancelOrder(ctx context.Context, req *desc.CancelOrderRequest) (*empty.Empty, error) {

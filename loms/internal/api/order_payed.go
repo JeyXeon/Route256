@@ -6,11 +6,12 @@ import (
 	desc "route256/loms/pkg/loms"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
-	ErrOrderPayedEmptyOrder = errors.New("empty order")
+	ErrOrderPayedEmptyOrder = status.Error(codes.InvalidArgument, "empty order")
 )
 
 func (i *Implementation) OrderPayed(ctx context.Context, req *desc.OrderPayedRequest) (*empty.Empty, error) {

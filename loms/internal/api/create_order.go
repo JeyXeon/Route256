@@ -5,12 +5,13 @@ import (
 	"log"
 	desc "route256/loms/pkg/loms"
 
-	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
-	ErrCreateOrderEmptyUser  = errors.New("empty user")
-	ErrCreateOrderEmptyItems = errors.New("empty items")
+	ErrCreateOrderEmptyUser  = status.Error(codes.InvalidArgument, "empty user")
+	ErrCreateOrderEmptyItems = status.Error(codes.InvalidArgument, "empty items")
 )
 
 func (i *Implementation) CreateOrder(ctx context.Context, req *desc.CreateOrderRequest) (*desc.CreateOrderResponse, error) {

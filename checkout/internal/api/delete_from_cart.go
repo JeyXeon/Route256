@@ -5,13 +5,14 @@ import (
 	"log"
 	desc "route256/checkout/pkg/checkout"
 
-	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
-	ErrDeleteFromCartEmptyUser = errors.New("empty user")
-	ErrDeleteFromCartEmptySKU  = errors.New("empty sku")
+	ErrDeleteFromCartEmptyUser = status.Error(codes.InvalidArgument, "empty user")
+	ErrDeleteFromCartEmptySKU  = status.Error(codes.InvalidArgument, "empty sku")
 )
 
 func (i *Implementation) DeleteFromCart(ctx context.Context, req *desc.DeleteFromCartRequest) (*emptypb.Empty, error) {
@@ -26,7 +27,7 @@ func (i *Implementation) DeleteFromCart(ctx context.Context, req *desc.DeleteFro
 
 	err := i.checkoutService.DeleteFromCart(ctx, req.User, req.Sku, req.Count)
 	if err != nil {
-		return &emptypb.Empty{}, err
+		return &emptypb.Empty{}, status.Error(codes.Internal, err.Error())
 	}
 
 	return &emptypb.Empty{}, nil

@@ -5,11 +5,12 @@ import (
 	"log"
 	desc "route256/loms/pkg/loms"
 
-	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
-	ErrListOrderEmptyOrder = errors.New("empty order")
+	ErrListOrderEmptyOrder = status.Error(codes.InvalidArgument, "empty order")
 )
 
 func (i *Implementation) ListOrder(ctx context.Context, req *desc.ListOrderRequest) (*desc.ListOrderResponse, error) {

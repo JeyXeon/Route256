@@ -6,11 +6,12 @@ import (
 	"route256/checkout/internal/converters"
 	desc "route256/checkout/pkg/checkout"
 
-	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
-	ErrListCartEmptyUser = errors.New("empty user")
+	ErrListCartEmptyUser = status.Error(codes.InvalidArgument, "empty user")
 )
 
 func (i *Implementation) ListCart(ctx context.Context, req *desc.ListCartRequest) (*desc.ListCartResponse, error) {
@@ -22,7 +23,7 @@ func (i *Implementation) ListCart(ctx context.Context, req *desc.ListCartRequest
 
 	cart, err := i.checkoutService.ListCart(ctx, req.User)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &desc.ListCartResponse{
