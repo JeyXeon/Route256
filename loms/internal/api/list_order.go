@@ -3,6 +3,7 @@ package loms
 import (
 	"context"
 	"log"
+	"route256/loms/internal/converter"
 	desc "route256/loms/pkg/loms"
 
 	"google.golang.org/grpc/codes"
@@ -20,14 +21,14 @@ func (i *Implementation) ListOrder(ctx context.Context, req *desc.ListOrderReque
 
 	log.Printf("listOrder: %+v", req)
 
+	order, err := i.lomsService.ListOrder(ctx, req.OrderID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	return &desc.ListOrderResponse{
-		Status: "new",
-		User:   5,
-		Items: []*desc.OrderItem{
-			{
-				Sku:   12,
-				Count: 5,
-			},
-		},
+		Status: string(order.Status),
+		User:   order.User,
+		Items:  converter.ToOrderItemsListLomsApi(order.Items),
 	}, nil
 }

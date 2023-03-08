@@ -21,5 +21,10 @@ func (i *Implementation) OrderPayed(ctx context.Context, req *desc.OrderPayedReq
 
 	log.Printf("orderPayed: %+v", req)
 
+	err := i.lomsService.PayOrder(ctx, req.OrderID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	return &empty.Empty{}, nil
 }

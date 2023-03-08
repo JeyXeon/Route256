@@ -21,5 +21,10 @@ func (i *Implementation) CancelOrder(ctx context.Context, req *desc.CancelOrderR
 
 	log.Printf("cancelOrder: %+v", req)
 
+	err := i.lomsService.CancelOrder(ctx, req.OrderID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	return &empty.Empty{}, nil
 }

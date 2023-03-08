@@ -3,6 +3,7 @@ package loms
 import (
 	"context"
 	"log"
+	"route256/loms/internal/converter"
 	desc "route256/loms/pkg/loms"
 
 	"google.golang.org/grpc/codes"
@@ -24,7 +25,13 @@ func (i *Implementation) CreateOrder(ctx context.Context, req *desc.CreateOrderR
 
 	log.Printf("createOrder: %+v", req)
 
+	orderItems := converter.ToOrderItemsListModel(req.Items)
+	orderId, err := i.lomsService.CreateOrder(ctx, req.User, orderItems)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	return &desc.CreateOrderResponse{
-		OrderID: 5,
+		OrderID: orderId,
 	}, nil
 }

@@ -8,7 +8,8 @@ import (
 )
 
 type ConfigStruct struct {
-	Port string `yaml:"port"`
+	Port      string `yaml:"port"`
+	LomsDbUrl string `yaml:"lomsDbUrl"`
 }
 
 var ConfigData ConfigStruct
