@@ -7,7 +7,7 @@ import (
 	lomsapi "route256/checkout/pkg/loms"
 )
 
-func (c *client) CreateOrder(ctx context.Context, user int64, items []*model.OrderItem) (int64, error) {
+func (c *client) CreateOrder(ctx context.Context, user int64, items []*model.CartItem) (int64, error) {
 	orderItems := converters.ToOrderItemListLomsApi(items)
 	req := &lomsapi.CreateOrderRequest{
 		User:  user,

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"route256/checkout/internal/model"
 
 	"github.com/pkg/errors"
 )
@@ -12,15 +11,18 @@ var (
 )
 
 func (m *Service) Purchase(ctx context.Context, user int64) (int64, error) {
-	orderId, err := m.lomsClient.CreateOrder(ctx, user, []*model.OrderItem{{
-		SKU:   5,
-		Count: 3,
-	}})
+	cartItems, err := m.itemsRepository.GetItems(ctx, user)
+	if err != nil {
+		return 0, err
+	}
+
+	orderId, err := m.lomsClient.CreateOrder(ctx, user, cartItems)
 	if err != nil {
 		return 0, errors.WithMessage(err, "creating order")
 	}
 	if orderId == 0 {
 		return 0, ErrInsufficientOrder
 	}
+
 	return orderId, nil
 }
