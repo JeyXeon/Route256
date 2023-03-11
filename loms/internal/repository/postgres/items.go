@@ -2,43 +2,108 @@ package postgres
 
 import (
 	"context"
+	"route256/loms/internal/converter"
 	"route256/loms/internal/model"
+	"route256/loms/internal/repository/schema"
+
+	sq "github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/pgxscan"
 )
 
 type itemsRepository struct {
-	queryEngine QueryEngine
+	queryEngineProvider QueryEngineProvider
 }
 
-func NewItemsRepository(queryEngine QueryEngine) *itemsRepository {
+const (
+	reservationTable = "reservation"
+
+	reservationOrderIdColumn     = "order_id"
+	reservationSkuColumn         = "sku"
+	reservationWarehouseIdColumn = "warehouse_id"
+	reservationCountColumn       = "count"
+)
+
+func NewItemsRepository(queryEngineProvider QueryEngineProvider) *itemsRepository {
 	return &itemsRepository{
-		queryEngine: queryEngine,
+		queryEngineProvider: queryEngineProvider,
 	}
 }
 
-func (itemsRepository *itemsRepository) GetOrderItems(ctx context.Context, orderId int64) ([]*model.OrderItem, error) {
-	return nil, nil
+func (r *itemsRepository) GetReservations(ctx context.Context, orderId int64) ([]*model.Reservation, error) {
+	db := r.queryEngineProvider.GetQueryEngine(ctx)
+
+	query, args, err := sq.
+		Select(reservationOrderIdColumn, reservationSkuColumn, reservationWarehouseIdColumn, reservationCountColumn).
+		From(reservationTable).
+		Where(sq.Eq{reservationOrderIdColumn: orderId}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var reservations []*schema.Reservation
+	if err := pgxscan.Select(ctx, db, &reservations, query, args...); err != nil {
+		return nil, err
+	}
+
+	result := converter.ToReservationListModel(reservations)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
-func (itemsRepository *itemsRepository) GetReservations(ctx context.Context, orderId int64) ([]*model.Reservation, error) {
-	return nil, nil
-}
+func (r *itemsRepository) AddReservations(ctx context.Context, orderItems []*model.Reservation) error {
+	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-func (itemsRepository *itemsRepository) AddReservations(ctx context.Context, orderItems []*model.Reservation) error {
+	queryBuilder := sq.
+		Insert(reservationTable).
+		Columns(reservationSkuColumn, reservationOrderIdColumn, reservationWarehouseIdColumn, reservationCountColumn)
+
+	for _, orderItem := range orderItems {
+		queryBuilder = queryBuilder.Values(
+			orderItem.Sku,
+			orderItem.OrderId,
+			orderItem.WareHouseId,
+			orderItem.Count,
+		)
+	}
+
+	query, args, err := queryBuilder.
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return err
+	}
+
+	rows, err := db.Query(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
 	return nil
 }
 
-func (itemsRepository *itemsRepository) RemoveReservations(ctx context.Context, orderId int64) error {
+func (r *itemsRepository) RemoveReservations(ctx context.Context, orderId int64) error {
+	db := r.queryEngineProvider.GetQueryEngine(ctx)
+
+	query, args, err := sq.
+		Delete(reservationTable).
+		Where(sq.Eq{reservationOrderIdColumn: orderId}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return err
+	}
+
+	rows, err := db.Query(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
 	return nil
-}
-
-func (itemsRepository *itemsRepository) GetStocks(ctx context.Context, sku uint32) ([]*model.Stock, error) {
-	return nil, nil
-}
-
-func (itemsRepository *itemsRepository) AddStocks(ctx context.Context, stocks []*model.Stock) error {
-	return nil
-}
-
-func (itemsRepository *itemsRepository) ReserveStocks(ctx context.Context, stocks []*model.OrderItem) ([]*model.Stock, error) {
-	return nil, nil
 }

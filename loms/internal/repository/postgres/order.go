@@ -2,27 +2,106 @@ package postgres
 
 import (
 	"context"
+	"fmt"
+	"route256/loms/internal/converter"
 	"route256/loms/internal/model"
+	"route256/loms/internal/repository/schema"
+
+	sq "github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/pgxscan"
 )
 
 type orderRepository struct {
-	queryEngine QueryEngine
+	queryEngineProvider QueryEngineProvider
 }
 
-func NewOrderRepository(queryEngine QueryEngine) *orderRepository {
+const (
+	orderTable = "user_order"
+
+	orderIdColumn = "order_id"
+	userIdColumn  = "user_id"
+	statusColumn  = "status"
+)
+
+func NewOrderRepository(queryEngineProvider QueryEngineProvider) *orderRepository {
 	return &orderRepository{
-		queryEngine: queryEngine,
+		queryEngineProvider: queryEngineProvider,
 	}
 }
 
-func (orderRepository *orderRepository) CreateOrder(ctx context.Context, userId int64) (int64, error) {
-	return 0, nil
+func (r *orderRepository) CreateOrder(ctx context.Context, userId int64) (int64, error) {
+	db := r.queryEngineProvider.GetQueryEngine(ctx)
+
+	query, args, err := sq.
+		Insert(orderTable).
+		Columns(userIdColumn, statusColumn).
+		Values(userId, schema.New).
+		Suffix(fmt.Sprintf("RETURNING %s", orderIdColumn)).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	row := db.QueryRow(ctx, query, args...)
+
+	var orderId int64
+	if err := row.Scan(&orderId); err != nil {
+		return 0, err
+	}
+
+	return orderId, nil
 }
 
-func (orderRepository *orderRepository) GetOrder(ctx context.Context, orderId int64) (*model.Order, error) {
-	return nil, nil
+func (r *orderRepository) GetOrder(ctx context.Context, orderId int64) (*model.Order, error) {
+	db := r.queryEngineProvider.GetQueryEngine(ctx)
+
+	query, args, err := sq.
+		Select(orderIdColumn, userIdColumn, statusColumn).
+		From(orderTable).
+		Where(sq.Eq{orderIdColumn: orderId}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var order schema.Order
+	if err := pgxscan.Get(ctx, db, &order, query, args...); err != nil {
+		return nil, err
+	}
+
+	result, err := converter.ToOrderModel(&order)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
-func (orderRepository *orderRepository) UpdateOrderStatus(ctx context.Context, orderId int64, newStatus model.OrderStatus) error {
+func (r *orderRepository) UpdateOrderStatus(ctx context.Context, orderId int64, newStatus model.OrderStatus) error {
+	db := r.queryEngineProvider.GetQueryEngine(ctx)
+
+	status, err := converter.ToOrderStatusSchema(newStatus)
+	if err != nil {
+		return err
+	}
+
+	query, args, err := sq.
+		Update(orderTable).
+		Set(statusColumn, status).
+		Where(sq.Eq{orderIdColumn: orderId}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return err
+	}
+
+	rows, err := db.Query(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
 	return nil
 }
