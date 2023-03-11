@@ -5,19 +5,19 @@ import (
 	desc "route256/loms/pkg/loms"
 )
 
-func ToOrderItemsListModel(orderItems []*desc.OrderItem) []*model.OrderItem {
+func LomsApiToOrderItemsListModel(orderItems []*desc.OrderItem) []*model.OrderItem {
 	if orderItems == nil {
 		return nil
 	}
 
 	result := make([]*model.OrderItem, 0, len(orderItems))
 	for _, orderItem := range orderItems {
-		result = append(result, ToOrderItemModel(orderItem))
+		result = append(result, LomsApiToOrderItemModel(orderItem))
 	}
 	return result
 }
 
-func ToOrderItemModel(orderItem *desc.OrderItem) *model.OrderItem {
+func LomsApiToOrderItemModel(orderItem *desc.OrderItem) *model.OrderItem {
 	if orderItem == nil {
 		return nil
 	}
@@ -28,19 +28,19 @@ func ToOrderItemModel(orderItem *desc.OrderItem) *model.OrderItem {
 	}
 }
 
-func ToOrderItemsListLomsApi(orderItems []*model.OrderItem) []*desc.OrderItem {
+func ModelToOrderItemsListLomsApi(orderItems []*model.OrderItem) []*desc.OrderItem {
 	if orderItems == nil {
 		return nil
 	}
 
 	result := make([]*desc.OrderItem, 0, len(orderItems))
 	for _, orderItem := range orderItems {
-		result = append(result, ToOrderItemLomsApi(orderItem))
+		result = append(result, ModelToOrderItemLomsApi(orderItem))
 	}
 	return result
 }
 
-func ToOrderItemLomsApi(orderItem *model.OrderItem) *desc.OrderItem {
+func ModelToOrderItemLomsApi(orderItem *model.OrderItem) *desc.OrderItem {
 	if orderItem == nil {
 		return nil
 	}

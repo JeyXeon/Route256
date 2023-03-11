@@ -71,7 +71,7 @@ func (r *orderRepository) GetOrder(ctx context.Context, orderId int64) (*model.O
 		return nil, err
 	}
 
-	result, err := converter.ToOrderModel(&order)
+	result, err := converter.SchemaToOrderModel(&order)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (r *orderRepository) GetOrder(ctx context.Context, orderId int64) (*model.O
 func (r *orderRepository) UpdateOrderStatus(ctx context.Context, orderId int64, newStatus model.OrderStatus) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	status, err := converter.ToOrderStatusSchema(newStatus)
+	status, err := converter.ModelToOrderStatusSchema(newStatus)
 	if err != nil {
 		return err
 	}

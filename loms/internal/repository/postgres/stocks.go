@@ -46,7 +46,7 @@ func (r *stocksRepository) GetStocks(ctx context.Context, skus []uint32) ([]*mod
 		return nil, err
 	}
 
-	return converter.ToStockListModel(stocks), nil
+	return converter.SchemaToStockListModel(stocks), nil
 }
 
 func (r *stocksRepository) WriteOffStocks(ctx context.Context, stocks []*model.Stock) error {

@@ -5,19 +5,19 @@ import (
 	"route256/loms/internal/repository/schema"
 )
 
-func ToReservationListModel(reservations []*schema.Reservation) []*model.Reservation {
+func SchemaToReservationListModel(reservations []*schema.Reservation) []*model.Reservation {
 	if reservations == nil {
 		return nil
 	}
 
 	result := make([]*model.Reservation, 0, len(reservations))
 	for _, reservation := range reservations {
-		result = append(result, ToReservationModel(reservation))
+		result = append(result, SchemaToReservationModel(reservation))
 	}
 	return result
 }
 
-func ToReservationModel(reservation *schema.Reservation) *model.Reservation {
+func SchemaToReservationModel(reservation *schema.Reservation) *model.Reservation {
 	if reservation == nil {
 		return nil
 	}

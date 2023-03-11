@@ -47,7 +47,7 @@ func (r *reservationsRepository) GetReservations(ctx context.Context, orderId in
 		return nil, err
 	}
 
-	result := converter.ToReservationListModel(reservations)
+	result := converter.SchemaToReservationListModel(reservations)
 	if err != nil {
 		return nil, err
 	}

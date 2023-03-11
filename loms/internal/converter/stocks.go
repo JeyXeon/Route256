@@ -6,19 +6,19 @@ import (
 	desc "route256/loms/pkg/loms"
 )
 
-func ToStockListLomsApi(stocks []*model.Stock) []*desc.Stock {
+func ModelToStockListLomsApi(stocks []*model.Stock) []*desc.Stock {
 	if stocks == nil {
 		return nil
 	}
 
 	result := make([]*desc.Stock, 0, len(stocks))
 	for _, stock := range stocks {
-		result = append(result, ToStockLomsApi(stock))
+		result = append(result, ModelToStockLomsApi(stock))
 	}
 	return result
 }
 
-func ToStockLomsApi(stock *model.Stock) *desc.Stock {
+func ModelToStockLomsApi(stock *model.Stock) *desc.Stock {
 	if stock == nil {
 		return nil
 	}
@@ -29,19 +29,19 @@ func ToStockLomsApi(stock *model.Stock) *desc.Stock {
 	}
 }
 
-func ToStockListModel(stocks []*schema.Stock) []*model.Stock {
+func SchemaToStockListModel(stocks []*schema.Stock) []*model.Stock {
 	if stocks == nil {
 		return nil
 	}
 
 	result := make([]*model.Stock, 0, len(stocks))
 	for _, stock := range stocks {
-		result = append(result, ToStockModel(stock))
+		result = append(result, SchemaToStockModel(stock))
 	}
 	return result
 }
 
-func ToStockModel(stock *schema.Stock) *model.Stock {
+func SchemaToStockModel(stock *schema.Stock) *model.Stock {
 	if stock == nil {
 		return nil
 	}

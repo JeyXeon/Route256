@@ -27,6 +27,6 @@ func (i *Implementation) Stocks(ctx context.Context, req *desc.StocksRequest) (*
 	}
 
 	return &desc.StocksResponse{
-		Stocks: converter.ToStockListLomsApi(stocks),
+		Stocks: converter.ModelToStockListLomsApi(stocks),
 	}, nil
 }

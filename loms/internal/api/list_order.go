@@ -29,6 +29,6 @@ func (i *Implementation) ListOrder(ctx context.Context, req *desc.ListOrderReque
 	return &desc.ListOrderResponse{
 		Status: string(order.Status),
 		User:   order.User,
-		Items:  converter.ToOrderItemsListLomsApi(order.Items),
+		Items:  converter.ModelToOrderItemsListLomsApi(order.Items),
 	}, nil
 }

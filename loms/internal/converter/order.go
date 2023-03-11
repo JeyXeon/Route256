@@ -11,7 +11,7 @@ var (
 	ErrUnknownOrderStatus = errors.New("unknown error status")
 )
 
-func ToOrderStatusModel(orderStatus schema.OrderStatus) (model.OrderStatus, error) {
+func SchemaToOrderStatusModel(orderStatus schema.OrderStatus) (model.OrderStatus, error) {
 	switch orderStatus {
 	case schema.New:
 		return model.New, nil
@@ -28,12 +28,12 @@ func ToOrderStatusModel(orderStatus schema.OrderStatus) (model.OrderStatus, erro
 	}
 }
 
-func ToOrderModel(order *schema.Order) (*model.Order, error) {
+func SchemaToOrderModel(order *schema.Order) (*model.Order, error) {
 	if order == nil {
 		return nil, nil
 	}
 
-	orderStatus, err := ToOrderStatusModel(order.Status)
+	orderStatus, err := SchemaToOrderStatusModel(order.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func ToOrderModel(order *schema.Order) (*model.Order, error) {
 	}, nil
 }
 
-func ToOrderStatusSchema(orderStatus model.OrderStatus) (schema.OrderStatus, error) {
+func ModelToOrderStatusSchema(orderStatus model.OrderStatus) (schema.OrderStatus, error) {
 	switch orderStatus {
 	case model.New:
 		return schema.New, nil
