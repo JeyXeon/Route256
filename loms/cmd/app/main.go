@@ -40,11 +40,11 @@ func main() {
 
 	dbManager := dbmanager.New(pool)
 
-	itemRepository := postgres.NewItemsRepository(dbManager)
+	reservationsRepository := postgres.NewReservationsRepository(dbManager)
 	stocksRepository := postgres.NewStocksRepository(dbManager)
 	orderRepository := postgres.NewOrderRepository(dbManager)
 
-	lomsService := service.New(dbManager, itemRepository, stocksRepository, orderRepository)
+	lomsService := service.New(dbManager, reservationsRepository, stocksRepository, orderRepository)
 
 	desc.RegisterLomsServer(s, loms.NewLoms(lomsService))
 

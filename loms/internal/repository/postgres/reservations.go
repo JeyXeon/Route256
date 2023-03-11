@@ -10,7 +10,7 @@ import (
 	"github.com/georgysavva/scany/pgxscan"
 )
 
-type itemsRepository struct {
+type reservationsRepository struct {
 	queryEngineProvider QueryEngineProvider
 }
 
@@ -23,13 +23,13 @@ const (
 	reservationCountColumn       = "count"
 )
 
-func NewItemsRepository(queryEngineProvider QueryEngineProvider) *itemsRepository {
-	return &itemsRepository{
+func NewReservationsRepository(queryEngineProvider QueryEngineProvider) *reservationsRepository {
+	return &reservationsRepository{
 		queryEngineProvider: queryEngineProvider,
 	}
 }
 
-func (r *itemsRepository) GetReservations(ctx context.Context, orderId int64) ([]*model.Reservation, error) {
+func (r *reservationsRepository) GetReservations(ctx context.Context, orderId int64) ([]*model.Reservation, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	query, args, err := sq.
@@ -55,7 +55,7 @@ func (r *itemsRepository) GetReservations(ctx context.Context, orderId int64) ([
 	return result, nil
 }
 
-func (r *itemsRepository) AddReservations(ctx context.Context, orderItems []*model.Reservation) error {
+func (r *reservationsRepository) AddReservations(ctx context.Context, orderItems []*model.Reservation) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	queryBuilder := sq.
@@ -87,7 +87,7 @@ func (r *itemsRepository) AddReservations(ctx context.Context, orderItems []*mod
 	return nil
 }
 
-func (r *itemsRepository) RemoveReservations(ctx context.Context, orderId int64) error {
+func (r *reservationsRepository) RemoveReservations(ctx context.Context, orderId int64) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	query, args, err := sq.

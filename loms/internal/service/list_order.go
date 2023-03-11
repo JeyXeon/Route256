@@ -21,7 +21,7 @@ func (s *Service) ListOrder(ctx context.Context, orderId int64) (*model.Order, e
 			return err
 		}
 
-		reservations, err := s.itemRepository.GetReservations(ctx, orderId)
+		reservations, err := s.reservationsRepository.GetReservations(ctx, orderId)
 		if err != nil {
 			return err
 		}

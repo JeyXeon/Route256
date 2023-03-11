@@ -9,7 +9,7 @@ type TransactionManager interface {
 	RunRepeatableRead(ctx context.Context, f func(ctxTX context.Context) error) error
 }
 
-type ItemRepository interface {
+type ReservationsRepository interface {
 	GetReservations(ctx context.Context, orderId int64) ([]*model.Reservation, error)
 	AddReservations(ctx context.Context, orderItems []*model.Reservation) error
 	RemoveReservations(ctx context.Context, orderId int64) error
@@ -28,22 +28,22 @@ type OrderRepository interface {
 }
 
 type Service struct {
-	transactionManager TransactionManager
-	itemRepository     ItemRepository
-	stocksRepository   StocksRepository
-	orderRepository    OrderRepository
+	transactionManager     TransactionManager
+	reservationsRepository ReservationsRepository
+	stocksRepository       StocksRepository
+	orderRepository        OrderRepository
 }
 
 func New(
 	transactionManager TransactionManager,
-	itemRepository ItemRepository,
+	reservationsRepository ReservationsRepository,
 	stocksRepository StocksRepository,
 	orderRepository OrderRepository,
 ) *Service {
 	return &Service{
-		transactionManager: transactionManager,
-		itemRepository:     itemRepository,
-		stocksRepository:   stocksRepository,
-		orderRepository:    orderRepository,
+		transactionManager:     transactionManager,
+		reservationsRepository: reservationsRepository,
+		stocksRepository:       stocksRepository,
+		orderRepository:        orderRepository,
 	}
 }

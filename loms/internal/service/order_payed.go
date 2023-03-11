@@ -17,7 +17,7 @@ func (s *Service) PayOrder(ctx context.Context, orderId int64) error {
 			return err
 		}
 
-		reservations, err := s.itemRepository.GetReservations(ctxTX, orderId)
+		reservations, err := s.reservationsRepository.GetReservations(ctxTX, orderId)
 		if err != nil {
 			return err
 		}

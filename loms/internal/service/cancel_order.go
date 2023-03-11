@@ -14,12 +14,12 @@ var (
 
 func (s *Service) CancelOrder(ctx context.Context, orderId int64) error {
 	err := s.transactionManager.RunRepeatableRead(ctx, func(ctxTX context.Context) error {
-		reservations, err := s.itemRepository.GetReservations(ctxTX, orderId)
+		reservations, err := s.reservationsRepository.GetReservations(ctxTX, orderId)
 		if err != nil {
 			return err
 		}
 
-		if err := s.itemRepository.RemoveReservations(ctxTX, orderId); err != nil {
+		if err := s.reservationsRepository.RemoveReservations(ctxTX, orderId); err != nil {
 			return err
 		}
 

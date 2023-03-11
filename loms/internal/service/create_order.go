@@ -39,7 +39,7 @@ func (s *Service) CreateOrder(ctx context.Context, userId int64, orderItems []*m
 		}
 
 		reservations := stocksToReservations(reservedStocks, createdOrderId)
-		if err := s.itemRepository.AddReservations(ctxTX, reservations); err != nil {
+		if err := s.reservationsRepository.AddReservations(ctxTX, reservations); err != nil {
 			return err
 		}
 
