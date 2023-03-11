@@ -5,7 +5,7 @@ import (
 	lomsapi "route256/checkout/pkg/loms"
 )
 
-func ToOrderItemListLomsApi(orderItems []*model.OrderItem) []*lomsapi.OrderItem {
+func ToOrderItemListLomsApi(orderItems []*model.CartItem) []*lomsapi.OrderItem {
 	if orderItems == nil {
 		return nil
 	}
@@ -19,7 +19,7 @@ func ToOrderItemListLomsApi(orderItems []*model.OrderItem) []*lomsapi.OrderItem 
 	return result
 }
 
-func ToOrderItemLomsApi(orderItem *model.OrderItem) *lomsapi.OrderItem {
+func ToOrderItemLomsApi(orderItem *model.CartItem) *lomsapi.OrderItem {
 	if orderItem == nil {
 		return nil
 	}
