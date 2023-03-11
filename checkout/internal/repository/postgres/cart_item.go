@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"route256/checkout/internal/converters"
 	"route256/checkout/internal/model"
 	"route256/checkout/internal/repository/schema"
 
@@ -88,7 +89,7 @@ func (r *CartItemRepository) GetItems(ctx context.Context, userId int64) ([]*mod
 		return nil, err
 	}
 
-	return schemaOrderItemsToModel(cartItems), nil
+	return converters.SchemaToOrderItemsModel(cartItems), nil
 }
 
 func (r *CartItemRepository) GetItem(ctx context.Context, userId int64, sku uint32) (*model.CartItem, error) {
@@ -109,7 +110,7 @@ func (r *CartItemRepository) GetItem(ctx context.Context, userId int64, sku uint
 		return nil, err
 	}
 
-	return schemaOrderItemToModel(&cartItem), nil
+	return converters.SchemaToOrderItemModel(&cartItem), nil
 }
 
 func (r *CartItemRepository) RemoveItems(ctx context.Context, userId int64, item *model.CartItem) error {
@@ -132,28 +133,4 @@ func (r *CartItemRepository) RemoveItems(ctx context.Context, userId int64, item
 	defer rows.Close()
 
 	return nil
-}
-
-func schemaOrderItemToModel(cartItem *schema.CartItem) *model.CartItem {
-	if cartItem == nil {
-		return nil
-	}
-
-	return &model.CartItem{
-		SKU:   cartItem.Sku,
-		Count: cartItem.Count,
-	}
-}
-
-func schemaOrderItemsToModel(cartItems []*schema.CartItem) []*model.CartItem {
-	if cartItems == nil {
-		return nil
-	}
-
-	result := make([]*model.CartItem, 0, len(cartItems))
-	for _, cartItem := range cartItems {
-		result = append(result, schemaOrderItemToModel(cartItem))
-	}
-
-	return result
 }

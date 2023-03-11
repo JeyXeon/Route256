@@ -5,21 +5,21 @@ import (
 	desc "route256/checkout/pkg/checkout"
 )
 
-func ToProductListDesc(products []*model.Product) []*desc.Product {
+func ModelToProductListDesc(products []*model.Product) []*desc.Product {
 	if products == nil {
 		return nil
 	}
 
 	result := make([]*desc.Product, 0, len(products))
 	for _, p := range products {
-		product := ToProductDesc(p)
+		product := ModelToProductDesc(p)
 		result = append(result, product)
 	}
 
 	return result
 }
 
-func ToProductDesc(product *model.Product) *desc.Product {
+func ModelToProductDesc(product *model.Product) *desc.Product {
 	if product == nil {
 		return nil
 	}

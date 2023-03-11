@@ -8,7 +8,7 @@ import (
 )
 
 func (c *client) CreateOrder(ctx context.Context, user int64, items []*model.CartItem) (int64, error) {
-	orderItems := converters.ToOrderItemListLomsApi(items)
+	orderItems := converters.ModelToOrderItemListLomsApi(items)
 	req := &lomsapi.CreateOrderRequest{
 		User:  user,
 		Items: orderItems,
