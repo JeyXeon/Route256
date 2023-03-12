@@ -13,9 +13,22 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - checkout_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - net
+  checkout-pgbouncer:
+    image: edoburu/pgbouncer
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_HOST=checkout-db
+      - DB_NAME=checkout
+      - POOL_MODE=transaction
+      - ADMIN_USERS=postgres
     ports:
       - "5433:5432"
-    restart: unless-stopped
+    depends_on:
+      - loms-db
     networks:
       - net
   checkout:
@@ -35,9 +48,22 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - loms_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - net
+  loms-pgbouncer:
+    image: edoburu/pgbouncer
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_HOST=loms-db
+      - DB_NAME=loms
+      - POOL_MODE=transaction
+      - ADMIN_USERS=postgres
     ports:
       - "5434:5432"
-    restart: unless-stopped
+    depends_on:
+      - loms-db
     networks:
       - net
   loms:
