@@ -28,6 +28,8 @@ func (m *Service) AddToCart(ctx context.Context, user int64, sku uint32, count u
 			if err != nil {
 				return err
 			}
+
+			return nil
 		}
 	}
 

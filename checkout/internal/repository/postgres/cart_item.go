@@ -36,6 +36,7 @@ func (r *CartItemRepository) AddItem(ctx context.Context, userId int64, item *mo
 		Columns(userIdColumn, skuColumn, countColumn).
 		Values(userId, item.SKU, item.Count).
 		PlaceholderFormat(sq.Dollar).
+		Suffix("ON CONFLICT (user_id, sku) DO UPDATE SET count = EXCLUDED.count").
 		ToSql()
 	if err != nil {
 		return err
