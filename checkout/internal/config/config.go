@@ -8,9 +8,10 @@ import (
 )
 
 type ConfigStruct struct {
-	Port     string `yaml:"port"`
-	Token    string `yaml:"token"`
-	Services struct {
+	Port          string `yaml:"port"`
+	CheckoutDbUrl string `yaml:"checkoutDbUrl"`
+	Token         string `yaml:"token"`
+	Services      struct {
 		Loms           string `yaml:"loms"`
 		ProductService string `yaml:"productService"`
 	} `yaml:"services"`

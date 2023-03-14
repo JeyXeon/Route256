@@ -1,17 +1,88 @@
 version: "3.1"
+
+networks:
+  net:
+    driver: bridge
+
 services:
+  checkout-db:
+    image: postgres:15.1
+    environment:
+      POSTGRES_DB: checkout
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - checkout_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - net
+  checkout-pgbouncer:
+    image: edoburu/pgbouncer
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_HOST=checkout-db
+      - DB_NAME=checkout
+      - POOL_MODE=transaction
+      - ADMIN_USERS=postgres
+      - AUTH_TYPE=plain
+    ports:
+      - "5433:5432"
+    depends_on:
+      - checkout-db
+    networks:
+      - net
   checkout:
     image: checkout
     build: ./checkout/
     ports:
       - "8080:8080"
+    depends_on:
+      - checkout-pgbouncer
+    networks:
+      - net
+  loms-db:
+    image: postgres:15.1
+    environment:
+      POSTGRES_DB: loms
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - loms_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - net
+  loms-pgbouncer:
+    image: edoburu/pgbouncer
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_HOST=loms-db
+      - DB_NAME=loms
+      - POOL_MODE=transaction
+      - ADMIN_USERS=postgres
+      - AUTH_TYPE=plain
+    ports:
+      - "5434:5432"
+    depends_on:
+      - loms-db
+    networks:
+      - net
   loms:
     image: loms
     build: ./loms/
     ports:
       - "8081:8081"
+    depends_on:
+      - loms-pgbouncer
+    networks:
+      - net
   # notification:
   #   image: notification
   #   build: ./notification
   #   ports:
   #     - "8082:8082"
+
+volumes:
+  loms_pg_data:
+  checkout_pg_data:

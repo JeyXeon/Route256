@@ -1,18 +1,22 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 	checkout "route256/checkout/internal/api"
 	"route256/checkout/internal/clients/loms"
 	"route256/checkout/internal/clients/productservice"
 	"route256/checkout/internal/config"
+	"route256/checkout/internal/repository/postgres"
 	"route256/checkout/internal/service"
 	desc "route256/checkout/pkg/checkout"
 	lomsapi "route256/checkout/pkg/loms"
 	productserviceapi "route256/checkout/pkg/productservice"
 	"route256/libs/clientconnwrapper"
+	"route256/libs/dbmanager"
 
+	"github.com/jackc/pgx/v4/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -33,6 +37,15 @@ func main() {
 	s := grpc.NewServer()
 	reflection.Register(s)
 
+	checkoutDbUrl := config.ConfigData.CheckoutDbUrl
+	pool, err := pgxpool.Connect(context.Background(), checkoutDbUrl)
+	if err != nil {
+		log.Fatalf("failed to connect to db: %v", err)
+	}
+
+	dbManager := dbmanager.New(pool)
+	orderItemRepository := postgres.NewCartItemRepository(dbManager)
+
 	lomsConn, err := clientconnwrapper.GetConn(config.ConfigData.Services.Loms)
 	if err != nil {
 		log.Fatalf("failed to connect to server: %v", err)
@@ -49,7 +62,7 @@ func main() {
 	lomsClient := loms.New(lomsapi.NewLomsClient(lomsConn))
 	productServiceClient := productservice.New(productserviceapi.NewProductServiceClient(productServiceConn), token)
 
-	checkoutService := service.New(lomsClient, productServiceClient)
+	checkoutService := service.New(dbManager, orderItemRepository, lomsClient, productServiceClient)
 
 	desc.RegisterCheckoutServer(s, checkout.NewCheckout(checkoutService))
 

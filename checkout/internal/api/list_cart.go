@@ -27,7 +27,7 @@ func (i *Implementation) ListCart(ctx context.Context, req *desc.ListCartRequest
 	}
 
 	return &desc.ListCartResponse{
-		Items:      converters.ToProductListDesc(cart.Items),
+		Items:      converters.ModelToProductListDesc(cart.Items),
 		TotalPrice: cart.TotalPrice,
 	}, nil
 }
