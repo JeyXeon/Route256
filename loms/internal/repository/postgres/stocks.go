@@ -31,11 +31,10 @@ func NewStocksRepository(queryEngineProvider QueryEngineProvider) *stocksReposit
 func (r *stocksRepository) GetStocks(ctx context.Context, skus []uint32) ([]*model.Stock, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Select(stockSkuColumn, stockWarehouseIdColumn, stockCountColumn).
 		From(stockTable).
 		Where(sq.Eq{stockSkuColumn: skus}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return nil, err
@@ -53,11 +52,10 @@ func (r *stocksRepository) WriteOffStocks(ctx context.Context, stocks []*model.S
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	for _, stock := range stocks {
-		query, args, err := sq.
+		query, args, err := queryBuilder().
 			Update(stockTable).
 			Set(stockCountColumn, sq.ConcatExpr(stockCountColumn, sq.Expr(" - ?", stock.Count))).
 			Where(sq.Eq{stockSkuColumn: stock.Sku, stockWarehouseIdColumn: stock.WareHouseId}).
-			PlaceholderFormat(sq.Dollar).
 			ToSql()
 		if err != nil {
 			return err
@@ -76,11 +74,10 @@ func (r *stocksRepository) RevertReservations(ctx context.Context, reservations 
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	for _, reservation := range reservations {
-		query, args, err := sq.
+		query, args, err := queryBuilder().
 			Update(stockTable).
 			Set(stockCountColumn, sq.ConcatExpr(stockCountColumn, sq.Expr(" + ?", reservation.Count))).
 			Where(sq.Eq{stockSkuColumn: reservation.Sku, stockWarehouseIdColumn: reservation.WareHouseId}).
-			PlaceholderFormat(sq.Dollar).
 			ToSql()
 		if err != nil {
 			return err

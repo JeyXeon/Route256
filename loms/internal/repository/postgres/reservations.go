@@ -32,11 +32,10 @@ func NewReservationsRepository(queryEngineProvider QueryEngineProvider) *reserva
 func (r *reservationsRepository) GetReservations(ctx context.Context, orderId int64) ([]*model.Reservation, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Select(reservationOrderIdColumn, reservationSkuColumn, reservationWarehouseIdColumn, reservationCountColumn).
 		From(reservationTable).
 		Where(sq.Eq{reservationOrderIdColumn: orderId}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return nil, err
@@ -58,7 +57,7 @@ func (r *reservationsRepository) GetReservations(ctx context.Context, orderId in
 func (r *reservationsRepository) AddReservations(ctx context.Context, orderItems []*model.Reservation) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	queryBuilder := sq.
+	queryBuilder := queryBuilder().
 		Insert(reservationTable).
 		Columns(reservationSkuColumn, reservationOrderIdColumn, reservationWarehouseIdColumn, reservationCountColumn)
 
@@ -71,9 +70,7 @@ func (r *reservationsRepository) AddReservations(ctx context.Context, orderItems
 		)
 	}
 
-	query, args, err := queryBuilder.
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
+	query, args, err := queryBuilder.ToSql()
 	if err != nil {
 		return err
 	}
@@ -89,10 +86,9 @@ func (r *reservationsRepository) AddReservations(ctx context.Context, orderItems
 func (r *reservationsRepository) RemoveReservations(ctx context.Context, orderId int64) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Delete(reservationTable).
 		Where(sq.Eq{reservationOrderIdColumn: orderId}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return err

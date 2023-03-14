@@ -31,12 +31,11 @@ const (
 func (r *CartItemRepository) AddItem(ctx context.Context, userId int64, item *model.CartItem) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Insert(cartItemTable).
 		Columns(userIdColumn, skuColumn, countColumn).
 		Values(userId, item.SKU, item.Count).
 		Suffix("ON CONFLICT (user_id, sku) DO UPDATE SET count = EXCLUDED.count").
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return err
@@ -53,10 +52,9 @@ func (r *CartItemRepository) AddItem(ctx context.Context, userId int64, item *mo
 func (r *CartItemRepository) DeleteItem(ctx context.Context, userId int64, item *model.CartItem) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Delete(cartItemTable).
 		Where(sq.Eq{userIdColumn: userId, skuColumn: item.SKU}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return err
@@ -73,11 +71,10 @@ func (r *CartItemRepository) DeleteItem(ctx context.Context, userId int64, item 
 func (r *CartItemRepository) GetItems(ctx context.Context, userId int64) ([]*model.CartItem, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Select(userIdColumn, skuColumn, countColumn).
 		From(cartItemTable).
 		Where(sq.Eq{userIdColumn: userId}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return nil, err
@@ -94,11 +91,10 @@ func (r *CartItemRepository) GetItems(ctx context.Context, userId int64) ([]*mod
 func (r *CartItemRepository) GetItem(ctx context.Context, userId int64, sku uint32) (*model.CartItem, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Select(userIdColumn, skuColumn, countColumn).
 		From(cartItemTable).
 		Where(sq.Eq{userIdColumn: userId, skuColumn: sku}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return nil, err
@@ -115,11 +111,10 @@ func (r *CartItemRepository) GetItem(ctx context.Context, userId int64, sku uint
 func (r *CartItemRepository) RemoveItems(ctx context.Context, userId int64, item *model.CartItem) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Update(cartItemTable).
 		Set(countColumn, sq.ConcatExpr(countColumn, sq.Expr(" - ?", item.Count))).
 		Where(sq.Eq{userIdColumn: userId, skuColumn: item.SKU}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return err

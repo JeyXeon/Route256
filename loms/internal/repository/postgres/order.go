@@ -32,12 +32,11 @@ func NewOrderRepository(queryEngineProvider QueryEngineProvider) *orderRepositor
 func (r *orderRepository) CreateOrder(ctx context.Context, userId int64) (int64, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Insert(orderTable).
 		Columns(userIdColumn, statusColumn).
 		Values(userId, schema.New).
 		Suffix(fmt.Sprintf("RETURNING %s", orderIdColumn)).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return 0, err
@@ -56,11 +55,10 @@ func (r *orderRepository) CreateOrder(ctx context.Context, userId int64) (int64,
 func (r *orderRepository) GetOrder(ctx context.Context, orderId int64) (*model.Order, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Select(orderIdColumn, userIdColumn, statusColumn).
 		From(orderTable).
 		Where(sq.Eq{orderIdColumn: orderId}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return nil, err
@@ -87,11 +85,10 @@ func (r *orderRepository) UpdateOrderStatus(ctx context.Context, orderId int64, 
 		return err
 	}
 
-	query, args, err := sq.
+	query, args, err := queryBuilder().
 		Update(orderTable).
 		Set(statusColumn, status).
 		Where(sq.Eq{orderIdColumn: orderId}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return err
