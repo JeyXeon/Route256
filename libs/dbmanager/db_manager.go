@@ -2,6 +2,7 @@ package dbmanager
 
 import (
 	"context"
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/multierr"
@@ -11,6 +12,7 @@ type QueryEngine interface {
 	Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
 	SendBatch(ctx context.Context, b *pgx.Batch) pgx.BatchResults
+	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
 }
 
 type DbManager struct {

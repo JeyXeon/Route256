@@ -63,11 +63,10 @@ func (r *stocksRepository) WriteOffStocks(ctx context.Context, stocks []*model.S
 			return err
 		}
 
-		rows, err := db.Query(ctx, query, args...)
+		_, err = db.Exec(ctx, query, args...)
 		if err != nil {
 			return err
 		}
-		rows.Close()
 	}
 
 	return nil
@@ -87,11 +86,10 @@ func (r *stocksRepository) RevertReservations(ctx context.Context, reservations 
 			return err
 		}
 
-		rows, err := db.Query(ctx, query, args...)
+		_, err = db.Exec(ctx, query, args...)
 		if err != nil {
 			return err
 		}
-		rows.Close()
 	}
 
 	return nil

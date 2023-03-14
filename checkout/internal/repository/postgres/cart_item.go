@@ -35,18 +35,17 @@ func (r *CartItemRepository) AddItem(ctx context.Context, userId int64, item *mo
 		Insert(cartItemTable).
 		Columns(userIdColumn, skuColumn, countColumn).
 		Values(userId, item.SKU, item.Count).
-		PlaceholderFormat(sq.Dollar).
 		Suffix("ON CONFLICT (user_id, sku) DO UPDATE SET count = EXCLUDED.count").
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return err
 	}
 
-	rows, err := db.Query(ctx, query, args...)
+	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
 	return nil
 }
@@ -63,11 +62,10 @@ func (r *CartItemRepository) DeleteItem(ctx context.Context, userId int64, item 
 		return err
 	}
 
-	rows, err := db.Query(ctx, query, args...)
+	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
 	return nil
 }
@@ -127,11 +125,10 @@ func (r *CartItemRepository) RemoveItems(ctx context.Context, userId int64, item
 		return err
 	}
 
-	rows, err := db.Query(ctx, query, args...)
+	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
 	return nil
 }

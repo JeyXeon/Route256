@@ -97,11 +97,10 @@ func (r *orderRepository) UpdateOrderStatus(ctx context.Context, orderId int64, 
 		return err
 	}
 
-	rows, err := db.Query(ctx, query, args...)
+	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
 	return nil
 }

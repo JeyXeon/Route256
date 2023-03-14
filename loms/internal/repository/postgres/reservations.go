@@ -78,11 +78,10 @@ func (r *reservationsRepository) AddReservations(ctx context.Context, orderItems
 		return err
 	}
 
-	rows, err := db.Query(ctx, query, args...)
+	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
 	return nil
 }
@@ -99,11 +98,10 @@ func (r *reservationsRepository) RemoveReservations(ctx context.Context, orderId
 		return err
 	}
 
-	rows, err := db.Query(ctx, query, args...)
+	_, err = db.Query(ctx, query, args...)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
 	return nil
 }
