@@ -25,10 +25,11 @@ services:
       - DB_NAME=checkout
       - POOL_MODE=transaction
       - ADMIN_USERS=postgres
+      - AUTH_TYPE=plain
     ports:
       - "5433:5432"
     depends_on:
-      - loms-db
+      - checkout-db
     networks:
       - net
   checkout:
@@ -37,7 +38,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - checkout-db
+      - checkout-pgbouncer
     networks:
       - net
   loms-db:
@@ -60,6 +61,7 @@ services:
       - DB_NAME=loms
       - POOL_MODE=transaction
       - ADMIN_USERS=postgres
+      - AUTH_TYPE=plain
     ports:
       - "5434:5432"
     depends_on:
@@ -72,7 +74,7 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - loms-db
+      - loms-pgbouncer
     networks:
       - net
   # notification:
