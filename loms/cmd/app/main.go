@@ -45,6 +45,7 @@ func main() {
 	orderRepository := postgres.NewOrderRepository(dbManager)
 
 	lomsService := service.New(dbManager, reservationsRepository, stocksRepository, orderRepository)
+	go lomsService.CheckPaymentTimeoutCron(context.Background())
 
 	desc.RegisterLomsServer(s, loms.NewLoms(lomsService))
 
