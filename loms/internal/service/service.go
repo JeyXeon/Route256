@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"route256/loms/internal/model"
+	"time"
 )
 
 type TransactionManager interface {
@@ -13,6 +14,7 @@ type ReservationsRepository interface {
 	GetReservations(ctx context.Context, orderId int64) ([]*model.Reservation, error)
 	AddReservations(ctx context.Context, orderItems []*model.Reservation) error
 	RemoveReservations(ctx context.Context, orderId int64) error
+	RemoveReservationsByOrderIds(ctx context.Context, orderId []int64) error
 }
 
 type StocksRepository interface {
@@ -24,7 +26,9 @@ type StocksRepository interface {
 type OrderRepository interface {
 	CreateOrder(ctx context.Context, userId int64) (int64, error)
 	GetOrder(ctx context.Context, orderId int64) (*model.Order, error)
+	GetTimeoutedPaymentOrderIds(ctx context.Context, time time.Time) ([]int64, error)
 	UpdateOrderStatus(ctx context.Context, orderId int64, newStatus model.OrderStatus) error
+	UpdateOrdersStatuses(ctx context.Context, orderIds []int64, newStatus model.OrderStatus) (int64, error)
 }
 
 type Service struct {

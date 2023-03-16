@@ -94,7 +94,26 @@ func (r *reservationsRepository) RemoveReservations(ctx context.Context, orderId
 		return err
 	}
 
-	_, err = db.Query(ctx, query, args...)
+	_, err = db.Exec(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *reservationsRepository) RemoveReservationsByOrderIds(ctx context.Context, orderIds []int64) error {
+	db := r.queryEngineProvider.GetQueryEngine(ctx)
+
+	query, args, err := queryBuilder().
+		Delete(reservationTable).
+		Where(sq.Eq{reservationOrderIdColumn: orderIds}).
+		ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
