@@ -7,13 +7,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Service struct {
+	Url         string `yaml:"url"`
+	RateSeconds int    `yaml:"rateSeconds"`
+	Tokens      int    `yaml:"tokens"`
+}
+
 type ConfigStruct struct {
 	Port          string `yaml:"port"`
 	CheckoutDbUrl string `yaml:"checkoutDbUrl"`
 	Token         string `yaml:"token"`
 	Services      struct {
-		Loms           string `yaml:"loms"`
-		ProductService string `yaml:"productService"`
+		Loms           Service `yaml:"loms"`
+		ProductService Service `yaml:"productService"`
 	} `yaml:"services"`
 }
 

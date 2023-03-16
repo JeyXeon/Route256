@@ -15,8 +15,10 @@ import (
 	productserviceapi "route256/checkout/pkg/productservice"
 	"route256/libs/clientconnwrapper"
 	"route256/libs/dbmanager"
+	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -46,13 +48,13 @@ func main() {
 	dbManager := dbmanager.New(pool)
 	orderItemRepository := postgres.NewCartItemRepository(dbManager)
 
-	lomsConn, err := clientconnwrapper.GetConn(config.ConfigData.Services.Loms)
+	lomsConn, err := clientconnwrapper.GetConn(config.ConfigData.Services.Loms.Url)
 	if err != nil {
 		log.Fatalf("failed to connect to server: %v", err)
 	}
 	defer lomsConn.Close()
 
-	productServiceConn, err := clientconnwrapper.GetConn(config.ConfigData.Services.ProductService)
+	productServiceConn, err := clientconnwrapper.GetConn(config.ConfigData.Services.ProductService.Url)
 	if err != nil {
 		log.Fatalf("failed to connect to server: %v", err)
 	}
@@ -62,7 +64,20 @@ func main() {
 	lomsClient := loms.New(lomsapi.NewLomsClient(lomsConn))
 	productServiceClient := productservice.New(productserviceapi.NewProductServiceClient(productServiceConn), token)
 
-	checkoutService := service.New(dbManager, orderItemRepository, lomsClient, productServiceClient)
+	productServiceRateSeconds := config.ConfigData.Services.ProductService.RateSeconds
+	productServiceTokens := config.ConfigData.Services.ProductService.Tokens
+	productServiceLimiter := rate.NewLimiter(
+		rate.Every(time.Second*time.Duration(productServiceRateSeconds)),
+		productServiceTokens,
+	)
+
+	checkoutService := service.New(
+		dbManager,
+		orderItemRepository,
+		lomsClient,
+		productServiceClient,
+		productServiceLimiter,
+	)
 
 	desc.RegisterCheckoutServer(s, checkout.NewCheckout(checkoutService))
 
