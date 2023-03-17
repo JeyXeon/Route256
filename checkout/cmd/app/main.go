@@ -15,10 +15,9 @@ import (
 	productserviceapi "route256/checkout/pkg/productservice"
 	"route256/libs/clientconnwrapper"
 	"route256/libs/dbmanager"
-	"time"
+	"route256/libs/ratelimiter"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -66,8 +65,9 @@ func main() {
 
 	productServiceRateSeconds := config.ConfigData.Services.ProductService.RateSeconds
 	productServiceTokens := config.ConfigData.Services.ProductService.Tokens
-	productServiceLimiter := rate.NewLimiter(
-		rate.Every(time.Second*time.Duration(productServiceRateSeconds)),
+	productServiceLimiter := ratelimiter.NewLimiter(
+		context.Background(),
+		productServiceRateSeconds,
 		productServiceTokens,
 	)
 

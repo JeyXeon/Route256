@@ -15,23 +15,7 @@ func (m *Service) ListCart(ctx context.Context, user int64) (*model.Cart, error)
 		return nil, err
 	}
 
-	request := func(ctx context.Context, sku uint32) (*model.Product, error) {
-		if err := m.productServiceLimiter.Wait(ctx); err != nil {
-			return nil, err
-		}
-
-		return m.productServiceClient.GetProduct(ctx, sku)
-	}
-
-	tasks := make([]workerpool.Task[uint32, *model.Product], 0, len(cartItems))
-	for _, cartItem := range cartItems {
-		sku := cartItem.SKU
-
-		tasks = append(tasks, workerpool.Task[uint32, *model.Product]{
-			Callback: request,
-			InArgs:   sku,
-		})
-	}
+	tasks := m.prepareGetProductTasks(cartItems)
 
 	workerPool, responses := workerpool.NewPool[uint32, *model.Product](ctx, 5)
 	workerPool.SubmitTasks(ctx, tasks)
@@ -39,13 +23,17 @@ func (m *Service) ListCart(ctx context.Context, user int64) (*model.Cart, error)
 	items := make([]*model.Product, 0, len(cartItems))
 	totalPrice := uint32(0)
 
+	// Вг чтобы дождаться, пока прочтутся все полученные результаты из канала, чтобы не вернуть ответ раньше времени
 	wg := sync.WaitGroup{}
 	wg.Add(1)
+
+	var reqErr error
+	// В отдельной горутине читаем из канала, чтобы не заблочить текущую
 	go func() {
 		defer wg.Done()
 		for response := range responses {
 			if response.Error != nil {
-				err = response.Error
+				reqErr = response.Error
 				break
 			}
 
@@ -54,15 +42,40 @@ func (m *Service) ListCart(ctx context.Context, user int64) (*model.Cart, error)
 			totalPrice += product.Price * product.Count
 		}
 	}()
-	if err != nil {
-		return nil, errors.WithMessage(err, "getting product")
-	}
-
+	// Закрываем воркер пул, чтобы выйти из := range responses выше
 	workerPool.Close()
+	// Дожидаемся вг ответов
 	wg.Wait()
+
+	// Если был зафейлившийся запрос, вышли из из := range в брейки и возвращаемся с ошибкой
+	if reqErr != nil {
+		return nil, errors.WithMessage(reqErr, "getting product")
+	}
 
 	return &model.Cart{
 		Items:      items,
 		TotalPrice: totalPrice,
 	}, nil
+}
+
+func (m *Service) prepareGetProductTasks(cartItems []*model.CartItem) []workerpool.Task[uint32, *model.Product] {
+	// Подготавливаем колбэк для генерации тасок
+	request := func(ctx context.Context, sku uint32) (*model.Product, error) {
+		if err := m.productServiceLimiter.Wait(ctx); err != nil {
+			return nil, err
+		}
+
+		return m.productServiceClient.GetProduct(ctx, sku)
+	}
+
+	// Генерируем по таске для каждого sku  корзине
+	tasks := make([]workerpool.Task[uint32, *model.Product], 0, len(cartItems))
+	for _, cartItem := range cartItems {
+		tasks = append(tasks, workerpool.Task[uint32, *model.Product]{
+			Callback: request,
+			InArgs:   cartItem.SKU,
+		})
+	}
+
+	return tasks
 }
