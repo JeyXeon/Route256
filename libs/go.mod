@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/jackc/pgconn v1.14.0
 	github.com/jackc/pgx/v4 v4.18.1
+	github.com/pkg/errors v0.8.1
 	go.uber.org/multierr v1.5.0
 	google.golang.org/grpc v1.53.0
 )
