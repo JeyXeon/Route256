@@ -47,7 +47,7 @@ func (m *Service) ListCart(ctx context.Context, user int64) (*model.Cart, error)
 	// Дожидаемся вг ответов
 	wg.Wait()
 
-	// Если был зафейлившийся запрос, вышли из из := range в брейки и возвращаемся с ошибкой
+	// Если была зафейлившаяся таска, вышли из := range в через break и возвращаемся с ошибкой
 	if reqErr != nil {
 		return nil, errors.WithMessage(reqErr, "getting product")
 	}
@@ -68,7 +68,7 @@ func (m *Service) prepareGetProductTasks(cartItems []*model.CartItem) []workerpo
 		return m.productServiceClient.GetProduct(ctx, sku)
 	}
 
-	// Генерируем по таске для каждого sku  корзине
+	// Генерируем по таске для каждого sku в корзине
 	tasks := make([]workerpool.Task[uint32, *model.Product], 0, len(cartItems))
 	for _, cartItem := range cartItems {
 		tasks = append(tasks, workerpool.Task[uint32, *model.Product]{
