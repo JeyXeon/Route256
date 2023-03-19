@@ -106,7 +106,7 @@ func worker[In, Out any](
 		select {
 		case <-ctx.Done():
 			return
-		case resultSink <- processTask[In, Out](ctx, task):
+		case resultSink <- processTask(ctx, task):
 		}
 	}
 

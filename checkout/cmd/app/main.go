@@ -16,6 +16,7 @@ import (
 	"route256/libs/clientconnwrapper"
 	"route256/libs/dbmanager"
 	"route256/libs/ratelimiter"
+	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"google.golang.org/grpc"
@@ -67,7 +68,7 @@ func main() {
 	productServiceTokens := config.ConfigData.Services.ProductService.Tokens
 	productServiceLimiter := ratelimiter.NewLimiter(
 		context.Background(),
-		productServiceRateSeconds,
+		time.Duration(productServiceRateSeconds),
 		productServiceTokens,
 	)
 

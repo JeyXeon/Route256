@@ -16,19 +16,19 @@ type Limiter interface {
 }
 
 type limiter struct {
-	secondsLimit int
-	tokensLimit  int
+	windowInterval time.Duration
+	tokensLimit    int
 
 	tokens int
 	mu     *sync.Mutex
 	ticker *time.Ticker
 }
 
-func NewLimiter(ctx context.Context, secondsLimit int, tokensLimit int) Limiter {
+func NewLimiter(ctx context.Context, windowInterval time.Duration, tokensLimit int) Limiter {
 	l := &limiter{
-		secondsLimit: secondsLimit,
-		tokensLimit:  tokensLimit,
-		mu:           &sync.Mutex{},
+		windowInterval: windowInterval,
+		tokensLimit:    tokensLimit,
+		mu:             &sync.Mutex{},
 	}
 
 	go l.processing(ctx)
@@ -61,7 +61,7 @@ func (l *limiter) Wait(ctx context.Context) error {
 
 func (l *limiter) processing(ctx context.Context) {
 	//Создаем тикер, который будет раз в secondsLimit секунд рефрешить количество доступных токенов
-	l.ticker = time.NewTicker(time.Second * time.Duration(l.secondsLimit))
+	l.ticker = time.NewTicker(time.Second * l.windowInterval)
 
 	for {
 		select {
