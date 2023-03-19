@@ -9,6 +9,10 @@ type TransactionManager interface {
 	RunRepeatableRead(ctx context.Context, f func(ctxTX context.Context) error) error
 }
 
+type Limiter interface {
+	Wait(ctx context.Context) (err error)
+}
+
 type ItemRepository interface {
 	AddItem(ctx context.Context, userId int64, item *model.CartItem) error
 	DeleteItem(ctx context.Context, userId int64, item *model.CartItem) error
@@ -27,10 +31,11 @@ type ProductServiceClient interface {
 }
 
 type Service struct {
-	transactionManager   TransactionManager
-	itemsRepository      ItemRepository
-	lomsClient           LomsClient
-	productServiceClient ProductServiceClient
+	transactionManager    TransactionManager
+	itemsRepository       ItemRepository
+	lomsClient            LomsClient
+	productServiceClient  ProductServiceClient
+	productServiceLimiter Limiter
 }
 
 func New(
@@ -38,11 +43,13 @@ func New(
 	itemRepository ItemRepository,
 	stocksChecker LomsClient,
 	productServiceClient ProductServiceClient,
+	productServiceLimiter Limiter,
 ) *Service {
 	return &Service{
-		transactionManager:   transactionManager,
-		itemsRepository:      itemRepository,
-		lomsClient:           stocksChecker,
-		productServiceClient: productServiceClient,
+		transactionManager:    transactionManager,
+		itemsRepository:       itemRepository,
+		lomsClient:            stocksChecker,
+		productServiceClient:  productServiceClient,
+		productServiceLimiter: productServiceLimiter,
 	}
 }
