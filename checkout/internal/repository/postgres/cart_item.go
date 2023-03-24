@@ -10,12 +10,20 @@ import (
 	"github.com/georgysavva/scany/pgxscan"
 )
 
-type CartItemRepository struct {
+type CartItemRepository interface {
+	AddItem(ctx context.Context, userId int64, item *model.CartItem) error
+	DeleteItem(ctx context.Context, userId int64, item *model.CartItem) error
+	GetItems(ctx context.Context, userId int64) ([]*model.CartItem, error)
+	GetItem(ctx context.Context, userId int64, sku uint32) (*model.CartItem, error)
+	RemoveItems(ctx context.Context, userId int64, item *model.CartItem) error
+}
+
+type cartItemRepository struct {
 	queryEngineProvider QueryEngineProvider
 }
 
-func NewCartItemRepository(queryEngineProvider QueryEngineProvider) *CartItemRepository {
-	return &CartItemRepository{
+func NewCartItemRepository(queryEngineProvider QueryEngineProvider) CartItemRepository {
+	return &cartItemRepository{
 		queryEngineProvider: queryEngineProvider,
 	}
 }
@@ -28,7 +36,7 @@ const (
 	countColumn  = "count"
 )
 
-func (r *CartItemRepository) AddItem(ctx context.Context, userId int64, item *model.CartItem) error {
+func (r *cartItemRepository) AddItem(ctx context.Context, userId int64, item *model.CartItem) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	query, args, err := queryBuilder().
@@ -49,7 +57,7 @@ func (r *CartItemRepository) AddItem(ctx context.Context, userId int64, item *mo
 	return nil
 }
 
-func (r *CartItemRepository) DeleteItem(ctx context.Context, userId int64, item *model.CartItem) error {
+func (r *cartItemRepository) DeleteItem(ctx context.Context, userId int64, item *model.CartItem) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	query, args, err := queryBuilder().
@@ -68,7 +76,7 @@ func (r *CartItemRepository) DeleteItem(ctx context.Context, userId int64, item 
 	return nil
 }
 
-func (r *CartItemRepository) GetItems(ctx context.Context, userId int64) ([]*model.CartItem, error) {
+func (r *cartItemRepository) GetItems(ctx context.Context, userId int64) ([]*model.CartItem, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	query, args, err := queryBuilder().
@@ -88,7 +96,7 @@ func (r *CartItemRepository) GetItems(ctx context.Context, userId int64) ([]*mod
 	return converters.SchemaToOrderItemsModel(cartItems), nil
 }
 
-func (r *CartItemRepository) GetItem(ctx context.Context, userId int64, sku uint32) (*model.CartItem, error) {
+func (r *cartItemRepository) GetItem(ctx context.Context, userId int64, sku uint32) (*model.CartItem, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	query, args, err := queryBuilder().
@@ -108,7 +116,7 @@ func (r *CartItemRepository) GetItem(ctx context.Context, userId int64, sku uint
 	return converters.SchemaToOrderItemModel(&cartItem), nil
 }
 
-func (r *CartItemRepository) RemoveItems(ctx context.Context, userId int64, item *model.CartItem) error {
+func (r *cartItemRepository) RemoveItems(ctx context.Context, userId int64, item *model.CartItem) error {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	query, args, err := queryBuilder().
