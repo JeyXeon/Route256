@@ -15,6 +15,11 @@ func (m *Service) ListCart(ctx context.Context, user int64) (*model.Cart, error)
 		return nil, err
 	}
 
+	countsBySku := make(map[uint32]uint32, len(cartItems))
+	for _, cartItem := range cartItems {
+		countsBySku[cartItem.SKU] = cartItem.Count
+	}
+
 	tasks := m.prepareGetProductTasks(cartItems)
 
 	workerPool, responses := workerpool.NewPool[uint32, *model.Product](ctx, 5)
@@ -38,6 +43,7 @@ func (m *Service) ListCart(ctx context.Context, user int64) (*model.Cart, error)
 			}
 
 			product := response.Result
+			product.Count = countsBySku[product.SKU]
 			items = append(items, product)
 			totalPrice += product.Price * product.Count
 		}
