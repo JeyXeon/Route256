@@ -1,4 +1,4 @@
-package tests
+package checkout
 
 import (
 	"context"
@@ -237,7 +237,18 @@ func TestListCart(t *testing.T) {
 			))
 
 			res, err := api.ListCart(testCase.args.ctx, testCase.args.req)
-			require.Equal(t, testCase.want, res)
+
+			if testCase.want != nil {
+				require.Equal(t, len(testCase.want.Items), len(res.Items))
+
+				resProductsMap := toProductsMap(testCase.want)
+				for _, product := range res.Items {
+					require.Equal(t, product, resProductsMap[product.Sku])
+				}
+
+				require.Equal(t, testCase.want, res)
+			}
+
 			if testCase.err != nil {
 				require.ErrorContains(t, err, testCase.err.Error())
 			} else {
@@ -245,4 +256,13 @@ func TestListCart(t *testing.T) {
 			}
 		})
 	}
+}
+
+func toProductsMap(cart *desc.ListCartResponse) map[uint32]*desc.Product {
+	result := make(map[uint32]*desc.Product, len(cart.Items))
+	for _, item := range cart.Items {
+		result[item.Sku] = item
+	}
+
+	return result
 }

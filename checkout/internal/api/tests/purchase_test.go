@@ -1,4 +1,4 @@
-package tests
+package checkout
 
 import (
 	"context"
@@ -169,7 +169,9 @@ func TestPurchase(t *testing.T) {
 			))
 
 			res, err := api.Purchase(testCase.args.ctx, testCase.args.req)
+
 			require.Equal(t, testCase.want, res)
+
 			if testCase.err != nil {
 				require.ErrorContains(t, err, testCase.err.Error())
 			} else {
