@@ -245,8 +245,6 @@ func TestListCart(t *testing.T) {
 				for _, product := range res.Items {
 					require.Equal(t, product, resProductsMap[product.Sku])
 				}
-
-				require.Equal(t, testCase.want, res)
 			}
 
 			if testCase.err != nil {

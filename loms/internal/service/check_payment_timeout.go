@@ -19,7 +19,7 @@ func (s *Service) CheckPaymentTimeoutCron(ctx context.Context) {
 	// Таска на очищение просроченных заказов гоняется раз в секунду
 	ticker := time.NewTicker(time.Second * 1)
 
-	workerPool, results := workerpool.NewPool[time.Time, int64](ctx, 5)
+	workerPool, results := workerpool.NewPool[time.Time, int](ctx, 5)
 	defer workerPool.Close()
 
 	wg := sync.WaitGroup{}
@@ -41,7 +41,7 @@ func (s *Service) CheckPaymentTimeoutCron(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			task := workerpool.Task[time.Time, int64]{
+			task := workerpool.Task[time.Time, int]{
 				Callback: s.cancelTimeoutedOrders,
 				InArgs:   time.Now(),
 			}
@@ -53,8 +53,8 @@ func (s *Service) CheckPaymentTimeoutCron(ctx context.Context) {
 }
 
 // Метод, используемый в качестве колбэка для таски
-func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int64, error) {
-	var cancelledOrdersAmount int64
+func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int, error) {
+	var cancelledOrderIds []int64
 	err := s.transactionManager.RunRepeatableRead(ctx, func(ctxTX context.Context) error {
 		timeoutedOrderIds, err := s.orderRepository.GetTimeoutedPaymentOrderIds(ctxTX, t)
 		if err != nil {
@@ -66,12 +66,12 @@ func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int64
 				return err
 			}
 
-			ordersCancelled, err := s.orderRepository.UpdateOrdersStatuses(ctxTX, timeoutedOrderIds, model.Cancelled)
+			cancelledIds, err := s.orderRepository.UpdateOrdersStatuses(ctxTX, timeoutedOrderIds, model.Cancelled)
 			if err != nil {
 				return err
 			}
 
-			cancelledOrdersAmount = ordersCancelled
+			cancelledOrderIds = cancelledIds
 		}
 
 		return nil
@@ -81,5 +81,12 @@ func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int64
 		return 0, ErrCancellingOrdersFailed
 	}
 
-	return cancelledOrdersAmount, nil
+	for _, cancelledOrderId := range cancelledOrderIds {
+		err := s.orderStateChangeProducer.SendOrderStatusChange(cancelledOrderId, model.Cancelled)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return len(cancelledOrderIds), nil
 }

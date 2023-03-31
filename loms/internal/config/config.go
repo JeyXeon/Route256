@@ -7,9 +7,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Topic struct {
+	Name string `yaml:"name"`
+}
+
+type Kafka struct {
+	Topics struct {
+		OrderStateChange Topic `yaml:"order_state_change"`
+	} `yaml:"topics"`
+	Brokers []string `yaml:"brokers"`
+}
+
 type ConfigStruct struct {
 	Port      string `yaml:"port"`
 	LomsDbUrl string `yaml:"lomsDbUrl"`
+	Kafka     Kafka  `yaml:"kafka"`
 }
 
 var ConfigData ConfigStruct

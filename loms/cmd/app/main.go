@@ -5,8 +5,10 @@ import (
 	"log"
 	"net"
 	"route256/libs/dbmanager"
+	"route256/libs/kafka"
 	loms "route256/loms/internal/api"
 	"route256/loms/internal/config"
+	"route256/loms/internal/kafka/producer"
 	"route256/loms/internal/repository/postgres"
 	"route256/loms/internal/service"
 	desc "route256/loms/pkg/loms"
@@ -40,11 +42,19 @@ func main() {
 
 	dbManager := dbmanager.New(pool)
 
+	brokers := config.ConfigData.Kafka.Brokers
+	asyncProducer, err := kafka.NewAsyncProducer(brokers)
+	if err != nil {
+		log.Fatalln("kafka async producer", err)
+	}
+	orderStatusChangeTopic := config.ConfigData.Kafka.Topics.OrderStateChange.Name
+	orderStatusChangeProducer := producer.NewOrderStatusProducer(asyncProducer, orderStatusChangeTopic)
+
 	reservationsRepository := postgres.NewReservationsRepository(dbManager)
 	stocksRepository := postgres.NewStocksRepository(dbManager)
 	orderRepository := postgres.NewOrderRepository(dbManager)
 
-	lomsService := service.New(dbManager, reservationsRepository, stocksRepository, orderRepository)
+	lomsService := service.New(dbManager, orderStatusChangeProducer, reservationsRepository, stocksRepository, orderRepository)
 	go lomsService.CheckPaymentTimeoutCron(context.Background())
 
 	desc.RegisterLomsServer(s, loms.NewLoms(lomsService))

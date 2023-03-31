@@ -15,6 +15,7 @@ var (
 
 func (s *Service) CreateOrder(ctx context.Context, userId int64, orderItems []*model.OrderItem) (int64, error) {
 	var orderId int64
+	var orderStatus model.OrderStatus
 
 	err := s.transactionManager.RunRepeatableRead(ctx, func(ctxTX context.Context) error {
 		createdOrderId, err := s.orderRepository.CreateOrder(ctxTX, userId)
@@ -32,7 +33,8 @@ func (s *Service) CreateOrder(ctx context.Context, userId int64, orderItems []*m
 
 		reservedStocks, err := createReservedStocks(orderItems, stocks)
 		if err != nil {
-			if err := s.orderRepository.UpdateOrderStatus(ctxTX, orderId, model.Failed); err != nil {
+			orderStatus = model.Failed
+			if err := s.orderRepository.UpdateOrderStatus(ctxTX, orderId, orderStatus); err != nil {
 				return err
 			}
 			return nil
@@ -43,7 +45,8 @@ func (s *Service) CreateOrder(ctx context.Context, userId int64, orderItems []*m
 			return err
 		}
 
-		if err := s.orderRepository.UpdateOrderStatus(ctxTX, orderId, model.AwaitingPayment); err != nil {
+		orderStatus = model.Failed
+		if err := s.orderRepository.UpdateOrderStatus(ctxTX, orderId, orderStatus); err != nil {
 			return err
 		}
 
@@ -52,6 +55,11 @@ func (s *Service) CreateOrder(ctx context.Context, userId int64, orderItems []*m
 	if err != nil {
 		log.Println(err.Error())
 		return 0, ErrCreatingOrderFailed
+	}
+
+	err = s.orderStateChangeProducer.SendOrderStatusChange(orderId, orderStatus)
+	if err != nil {
+		return 0, err
 	}
 
 	return orderId, nil

@@ -10,6 +10,10 @@ type TransactionManager interface {
 	RunRepeatableRead(ctx context.Context, f func(ctxTX context.Context) error) error
 }
 
+type OrderStateChangeProducer interface {
+	SendOrderStatusChange(orderId int64, status model.OrderStatus) error
+}
+
 type ReservationsRepository interface {
 	GetReservations(ctx context.Context, orderId int64) ([]*model.Reservation, error)
 	AddReservations(ctx context.Context, orderItems []*model.Reservation) error
@@ -28,26 +32,29 @@ type OrderRepository interface {
 	GetOrder(ctx context.Context, orderId int64) (*model.Order, error)
 	GetTimeoutedPaymentOrderIds(ctx context.Context, time time.Time) ([]int64, error)
 	UpdateOrderStatus(ctx context.Context, orderId int64, newStatus model.OrderStatus) error
-	UpdateOrdersStatuses(ctx context.Context, orderIds []int64, newStatus model.OrderStatus) (int64, error)
+	UpdateOrdersStatuses(ctx context.Context, orderIds []int64, newStatus model.OrderStatus) ([]int64, error)
 }
 
 type Service struct {
-	transactionManager     TransactionManager
-	reservationsRepository ReservationsRepository
-	stocksRepository       StocksRepository
-	orderRepository        OrderRepository
+	transactionManager       TransactionManager
+	orderStateChangeProducer OrderStateChangeProducer
+	reservationsRepository   ReservationsRepository
+	stocksRepository         StocksRepository
+	orderRepository          OrderRepository
 }
 
 func New(
 	transactionManager TransactionManager,
+	orderStateChangeProducer OrderStateChangeProducer,
 	reservationsRepository ReservationsRepository,
 	stocksRepository StocksRepository,
 	orderRepository OrderRepository,
 ) *Service {
 	return &Service{
-		transactionManager:     transactionManager,
-		reservationsRepository: reservationsRepository,
-		stocksRepository:       stocksRepository,
-		orderRepository:        orderRepository,
+		transactionManager:       transactionManager,
+		orderStateChangeProducer: orderStateChangeProducer,
+		reservationsRepository:   reservationsRepository,
+		stocksRepository:         stocksRepository,
+		orderRepository:          orderRepository,
 	}
 }
