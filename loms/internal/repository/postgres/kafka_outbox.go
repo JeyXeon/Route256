@@ -39,6 +39,7 @@ func (r *kafkaOutboxRepository) GetUnprocessedRecords(ctx context.Context) ([]*m
 		Select(outboxRecordIdColumn, outboxRecordTopicColumn, outboxRecordKeyColumn, outboxRecordMessageColumn, outboxRecordStateColumn, outboxRecordCreatedAtColumn).
 		From(outboxRecordTable).
 		Where(sq.Eq{outboxRecordStateColumn: schema.PendingDelivery}).
+		OrderBy(outboxRecordCreatedAtColumn).
 		ToSql()
 	if err != nil {
 		return nil, err
