@@ -4,14 +4,16 @@ import (
 	"context"
 	"route256/loms/internal/model"
 	"time"
+
+	"github.com/Shopify/sarama"
 )
 
 type TransactionManager interface {
 	RunRepeatableRead(ctx context.Context, f func(ctxTX context.Context) error) error
 }
 
-type OrderStateChangeProducer interface {
-	SendOrderStatusChange(orderId int64, status model.OrderStatus) error
+type KafkaSyncProducer interface {
+	SendMessage(msg *sarama.ProducerMessage) (partition int32, offset int64, err error)
 }
 
 type ReservationsRepository interface {
@@ -35,26 +37,36 @@ type OrderRepository interface {
 	UpdateOrdersStatuses(ctx context.Context, orderIds []int64, newStatus model.OrderStatus) ([]int64, error)
 }
 
+type OutboxKafkaRepository interface {
+	GetUnprocessedRecords(ctx context.Context) ([]*model.KafkaRecord, error)
+	UpdateRecordByID(ctx context.Context, message *model.KafkaRecord) error
+	RemoveRecordsBeforeDatetime(ctx context.Context, expireTime time.Time) error
+	CreateKafkaRecord(ctx context.Context, record *model.KafkaRecord) error
+}
+
 type Service struct {
-	transactionManager       TransactionManager
-	orderStateChangeProducer OrderStateChangeProducer
-	reservationsRepository   ReservationsRepository
-	stocksRepository         StocksRepository
-	orderRepository          OrderRepository
+	transactionManager     TransactionManager
+	kafkaSyncProducer      KafkaSyncProducer
+	reservationsRepository ReservationsRepository
+	stocksRepository       StocksRepository
+	orderRepository        OrderRepository
+	outboxKafkaRepository  OutboxKafkaRepository
 }
 
 func New(
 	transactionManager TransactionManager,
-	orderStateChangeProducer OrderStateChangeProducer,
+	kafkaSyncProducer KafkaSyncProducer,
 	reservationsRepository ReservationsRepository,
 	stocksRepository StocksRepository,
 	orderRepository OrderRepository,
+	outboxKafkaRepository OutboxKafkaRepository,
 ) *Service {
 	return &Service{
-		transactionManager:       transactionManager,
-		orderStateChangeProducer: orderStateChangeProducer,
-		reservationsRepository:   reservationsRepository,
-		stocksRepository:         stocksRepository,
-		orderRepository:          orderRepository,
+		transactionManager:     transactionManager,
+		kafkaSyncProducer:      kafkaSyncProducer,
+		reservationsRepository: reservationsRepository,
+		stocksRepository:       stocksRepository,
+		orderRepository:        orderRepository,
+		outboxKafkaRepository:  outboxKafkaRepository,
 	}
 }

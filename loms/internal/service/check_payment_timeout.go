@@ -54,14 +54,14 @@ func (s *Service) CheckPaymentTimeoutCron(ctx context.Context) {
 
 // Метод, используемый в качестве колбэка для таски
 func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int, error) {
-	var cancelledOrderIds []int64
+	var cancelledOrdersAmount int
 	err := s.transactionManager.RunRepeatableRead(ctx, func(ctxTX context.Context) error {
 		timeoutedOrderIds, err := s.orderRepository.GetTimeoutedPaymentOrderIds(ctxTX, t)
 		if err != nil {
 			return err
 		}
 
-		if timeoutedOrderIds == nil || len(timeoutedOrderIds) != 0 {
+		if len(timeoutedOrderIds) != 0 {
 			if err := s.reservationsRepository.RemoveReservationsByOrderIds(ctxTX, timeoutedOrderIds); err != nil {
 				return err
 			}
@@ -71,7 +71,19 @@ func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int, 
 				return err
 			}
 
-			cancelledOrderIds = cancelledIds
+			for _, cancelledOrderId := range cancelledIds {
+				orderStateChangeRecord, err := model.NewOrderStatusChangeKafkaRecord(cancelledOrderId, model.Cancelled)
+				if err != nil {
+					return err
+				}
+
+				err = s.outboxKafkaRepository.CreateKafkaRecord(ctxTX, orderStateChangeRecord)
+				if err != nil {
+					return err
+				}
+			}
+
+			cancelledOrdersAmount = len(cancelledIds)
 		}
 
 		return nil
@@ -81,12 +93,5 @@ func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int, 
 		return 0, ErrCancellingOrdersFailed
 	}
 
-	for _, cancelledOrderId := range cancelledOrderIds {
-		err := s.orderStateChangeProducer.SendOrderStatusChange(cancelledOrderId, model.Cancelled)
-		if err != nil {
-			return 0, err
-		}
-	}
-
-	return len(cancelledOrderIds), nil
+	return cancelledOrdersAmount, nil
 }
