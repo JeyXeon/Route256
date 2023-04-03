@@ -57,10 +57,5 @@ func (s *Service) CancelOrder(ctx context.Context, orderId int64) error {
 		return ErrCancellingOrderFailed
 	}
 
-	err = s.orderStateChangeProducer.SendOrderStatusChange(orderId, model.Cancelled)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
