@@ -19,7 +19,7 @@ func (s *Service) CheckPaymentTimeoutCron(ctx context.Context) {
 	// Таска на очищение просроченных заказов гоняется раз в секунду
 	ticker := time.NewTicker(time.Second * 1)
 
-	workerPool, results := workerpool.NewPool[time.Time, int64](ctx, 5)
+	workerPool, results := workerpool.NewPool[time.Time, int](ctx, 5)
 	defer workerPool.Close()
 
 	wg := sync.WaitGroup{}
@@ -41,7 +41,7 @@ func (s *Service) CheckPaymentTimeoutCron(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			task := workerpool.Task[time.Time, int64]{
+			task := workerpool.Task[time.Time, int]{
 				Callback: s.cancelTimeoutedOrders,
 				InArgs:   time.Now(),
 			}
@@ -53,25 +53,37 @@ func (s *Service) CheckPaymentTimeoutCron(ctx context.Context) {
 }
 
 // Метод, используемый в качестве колбэка для таски
-func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int64, error) {
-	var cancelledOrdersAmount int64
+func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int, error) {
+	var cancelledOrdersAmount int
 	err := s.transactionManager.RunRepeatableRead(ctx, func(ctxTX context.Context) error {
 		timeoutedOrderIds, err := s.orderRepository.GetTimeoutedPaymentOrderIds(ctxTX, t)
 		if err != nil {
 			return err
 		}
 
-		if timeoutedOrderIds == nil || len(timeoutedOrderIds) != 0 {
+		if len(timeoutedOrderIds) != 0 {
 			if err := s.reservationsRepository.RemoveReservationsByOrderIds(ctxTX, timeoutedOrderIds); err != nil {
 				return err
 			}
 
-			ordersCancelled, err := s.orderRepository.UpdateOrdersStatuses(ctxTX, timeoutedOrderIds, model.Cancelled)
+			cancelledIds, err := s.orderRepository.UpdateOrdersStatuses(ctxTX, timeoutedOrderIds, model.Cancelled)
 			if err != nil {
 				return err
 			}
 
-			cancelledOrdersAmount = ordersCancelled
+			for _, cancelledOrderId := range cancelledIds {
+				orderStateChangeRecord, err := model.NewOrderStatusChangeKafkaRecord(cancelledOrderId, model.Cancelled)
+				if err != nil {
+					return err
+				}
+
+				err = s.outboxKafkaRepository.CreateKafkaRecord(ctxTX, orderStateChangeRecord)
+				if err != nil {
+					return err
+				}
+			}
+
+			cancelledOrdersAmount = len(cancelledIds)
 		}
 
 		return nil

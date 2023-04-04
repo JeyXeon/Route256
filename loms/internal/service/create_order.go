@@ -35,6 +35,17 @@ func (s *Service) CreateOrder(ctx context.Context, userId int64, orderItems []*m
 			if err := s.orderRepository.UpdateOrderStatus(ctxTX, orderId, model.Failed); err != nil {
 				return err
 			}
+
+			orderStateChangeRecord, err := model.NewOrderStatusChangeKafkaRecord(orderId, model.Failed)
+			if err != nil {
+				return err
+			}
+
+			err = s.outboxKafkaRepository.CreateKafkaRecord(ctxTX, orderStateChangeRecord)
+			if err != nil {
+				return err
+			}
+
 			return nil
 		}
 
@@ -44,6 +55,16 @@ func (s *Service) CreateOrder(ctx context.Context, userId int64, orderItems []*m
 		}
 
 		if err := s.orderRepository.UpdateOrderStatus(ctxTX, orderId, model.AwaitingPayment); err != nil {
+			return err
+		}
+
+		orderStateChangeRecord, err := model.NewOrderStatusChangeKafkaRecord(orderId, model.AwaitingPayment)
+		if err != nil {
+			return err
+		}
+
+		err = s.outboxKafkaRepository.CreateKafkaRecord(ctxTX, orderStateChangeRecord)
+		if err != nil {
 			return err
 		}
 

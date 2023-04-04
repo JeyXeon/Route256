@@ -19,9 +19,8 @@ type Kafka struct {
 }
 
 type ConfigStruct struct {
-	Port      string `yaml:"port"`
-	LomsDbUrl string `yaml:"lomsDbUrl"`
-	Kafka     Kafka  `yaml:"kafka"`
+	Port  string `yaml:"port"`
+	Kafka Kafka  `yaml:"kafka"`
 }
 
 var ConfigData ConfigStruct

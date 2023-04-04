@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package notifications;
+
+option go_package = "route256/notifications;notifications";
+
+message OrderStatusChange {
+  int64 id = 1;
+  string status = 2;
+}

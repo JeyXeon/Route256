@@ -1,0 +1,9 @@
+port: ":8082"
+kafka:
+  topics:
+    order_state_change:
+      name: "order_state_change"
+  brokers:
+    - "kafka1:29091"
+    - "kafka2:29092"
+    - "kafka3:29093"

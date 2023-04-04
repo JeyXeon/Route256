@@ -40,6 +40,16 @@ func (s *Service) CancelOrder(ctx context.Context, orderId int64) error {
 			return err
 		}
 
+		orderStateChangeRecord, err := model.NewOrderStatusChangeKafkaRecord(orderId, model.Cancelled)
+		if err != nil {
+			return err
+		}
+
+		err = s.outboxKafkaRepository.CreateKafkaRecord(ctxTX, orderStateChangeRecord)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {

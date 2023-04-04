@@ -125,27 +125,28 @@ func (r *orderRepository) UpdateOrderStatus(ctx context.Context, orderId int64, 
 	return nil
 }
 
-func (r *orderRepository) UpdateOrdersStatuses(ctx context.Context, orderIds []int64, newStatus model.OrderStatus) (int64, error) {
+func (r *orderRepository) UpdateOrdersStatuses(ctx context.Context, orderIds []int64, newStatus model.OrderStatus) ([]int64, error) {
 	db := r.queryEngineProvider.GetQueryEngine(ctx)
 
 	status, err := converter.ModelToOrderStatusSchema(newStatus)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	query, args, err := queryBuilder().
 		Update(orderTable).
 		Set(statusColumn, status).
 		Where(sq.Eq{orderIdColumn: orderIds}).
+		Suffix("RETURNING order_id").
 		ToSql()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	res, err := db.Exec(ctx, query, args...)
-	if err != nil {
-		return 0, err
+	var result []int64
+	if err := pgxscan.Select(ctx, db, &result, query, args...); err != nil {
+		return nil, err
 	}
 
-	return res.RowsAffected(), nil
+	return result, nil
 }

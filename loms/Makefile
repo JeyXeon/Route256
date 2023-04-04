@@ -55,3 +55,10 @@ generate: get-go-deps install-go-deps
         --go-grpc_out=pkg/loms --go-grpc_opt=paths=source_relative \
         --plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
         $(APIDIR)/loms/loms.proto
+	mkdir -p pkg/notifications
+	protoc -I $(APIDIR)/notifications \
+        --go_out=pkg/notifications --go_opt=paths=source_relative \
+        --plugin=protoc-gen-go=bin/protoc-gen-go \
+      	--go-grpc_out=pkg/notifications --go-grpc_opt=paths=source_relative \
+    	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+    	$(APIDIR)/notifications/notifications.proto
