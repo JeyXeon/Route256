@@ -2,7 +2,6 @@ package checkout
 
 import (
 	"context"
-	"log"
 	desc "route256/checkout/pkg/checkout"
 
 	"google.golang.org/grpc/codes"
@@ -22,8 +21,6 @@ func (i *Implementation) AddToCart(ctx context.Context, req *desc.AddToCartReque
 	if req.Sku == 0 {
 		return &emptypb.Empty{}, ErrAddToCartEmptySKU
 	}
-
-	log.Printf("addToCart: %+v", req)
 
 	err := i.checkoutService.AddToCart(ctx, req.User, req.Sku, req.Count)
 	if err != nil {

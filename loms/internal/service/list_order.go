@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"route256/loms/internal/model"
 
 	"github.com/pkg/errors"
@@ -31,7 +30,6 @@ func (s *Service) ListOrder(ctx context.Context, orderId int64) (*model.Order, e
 		return nil
 	})
 	if err != nil {
-		log.Println("listing order failed", err)
 		return nil, ErrListingOrderFailed
 	}
 

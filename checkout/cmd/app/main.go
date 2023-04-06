@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net"
 	checkout "route256/checkout/internal/api"
 	"route256/checkout/internal/clients/loms"
@@ -15,34 +14,45 @@ import (
 	productserviceapi "route256/checkout/pkg/productservice"
 	"route256/libs/clientconnwrapper"
 	"route256/libs/dbmanager"
+	"route256/libs/logger"
 	"route256/libs/ratelimiter"
 	"time"
 
+	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
+	logger.Init(false)
+
 	err := config.Init()
 	if err != nil {
-		log.Fatal("config init", err)
+		logger.Fatal("config init", zap.Error(err))
 	}
 
 	port := config.ConfigData.Port
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			grpcMiddleware.ChainUnaryServer(
+				logger.LoggingInterceptor,
+			),
+		),
+	)
 	reflection.Register(s)
 
 	checkoutDbUrl := config.ConfigData.CheckoutDbUrl
 	pool, err := pgxpool.Connect(context.Background(), checkoutDbUrl)
 	if err != nil {
-		log.Fatalf("failed to connect to db: %v", err)
+		logger.Fatal("failed to connect to db", zap.Error(err))
 	}
 
 	dbManager := dbmanager.New(pool)
@@ -50,13 +60,13 @@ func main() {
 
 	lomsConn, err := clientconnwrapper.GetConn(config.ConfigData.Services.Loms.Url)
 	if err != nil {
-		log.Fatalf("failed to connect to server: %v", err)
+		logger.Fatal("failed to connect to loms server", zap.Error(err))
 	}
 	defer lomsConn.Close()
 
 	productServiceConn, err := clientconnwrapper.GetConn(config.ConfigData.Services.ProductService.Url)
 	if err != nil {
-		log.Fatalf("failed to connect to server: %v", err)
+		logger.Fatal("failed to connect to productService server", zap.Error(err))
 	}
 	defer productServiceConn.Close()
 
@@ -82,10 +92,10 @@ func main() {
 
 	desc.RegisterCheckoutServer(s, checkout.NewCheckout(checkoutService))
 
-	log.Printf("server listening at %v", lis.Addr())
+	logger.Info("server listening", zap.Any("address", lis.Addr()))
 
 	if err = s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		logger.Fatal("failed to serve", zap.Error(err))
 	}
 
 }

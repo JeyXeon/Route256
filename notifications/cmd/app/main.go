@@ -4,21 +4,25 @@ import (
 	"context"
 	"log"
 	"route256/libs/kafka"
+	"route256/libs/logger"
 	"route256/notifications/internal/config"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
 )
 
 func main() {
+	logger.Init(false)
+
 	err := config.Init()
 	if err != nil {
-		log.Fatal("config init", err)
+		logger.Fatal("config init", zap.Error(err))
 	}
 
 	brokers := config.ConfigData.Kafka.Brokers
 	c, err := kafka.NewConsumer(brokers)
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatal("kafka consumer", zap.Error(err))
 	}
 
 	orderStateChangeTopicName := config.ConfigData.Kafka.Topics.OrderStateChange.Name
@@ -26,7 +30,7 @@ func main() {
 		log.Println(string(message.Value))
 	})
 	if err = orderStateChangeListener.Subscribe(); err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
 	<-context.TODO().Done()

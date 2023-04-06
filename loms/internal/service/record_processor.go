@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
-	"log"
+	"route256/libs/logger"
 	"route256/loms/internal/model"
 	"time"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
 )
 
 func (s *Service) RunRecordProcessor(ctx context.Context) {
@@ -22,7 +23,7 @@ func (s *Service) RunRecordProcessor(ctx context.Context) {
 				return nil
 			})
 			if err != nil {
-				log.Println(err.Error())
+				logger.Error("records processing failed", zap.Error(err))
 			}
 		case <-ctx.Done():
 			ticker.Stop()

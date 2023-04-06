@@ -2,7 +2,6 @@ package loms
 
 import (
 	"context"
-	"log"
 	"route256/loms/internal/converter"
 	desc "route256/loms/pkg/loms"
 
@@ -18,8 +17,6 @@ func (i *Implementation) Stocks(ctx context.Context, req *desc.StocksRequest) (*
 	if req.Sku == 0 {
 		return nil, ErrStocksEmptySKU
 	}
-
-	log.Printf("stocks: %+v", req)
 
 	stocks, err := i.lomsService.GetStocks(ctx, req.Sku)
 	if err != nil {

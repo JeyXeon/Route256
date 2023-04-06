@@ -2,7 +2,6 @@ package checkout
 
 import (
 	"context"
-	"log"
 	desc "route256/checkout/pkg/checkout"
 
 	"google.golang.org/grpc/codes"
@@ -22,8 +21,6 @@ func (i *Implementation) DeleteFromCart(ctx context.Context, req *desc.DeleteFro
 	if req.Sku == 0 {
 		return &emptypb.Empty{}, ErrDeleteFromCartEmptySKU
 	}
-
-	log.Printf("deleteFromCart: %+v", req)
 
 	err := i.checkoutService.DeleteFromCart(ctx, req.User, req.Sku, req.Count)
 	if err != nil {
