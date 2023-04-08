@@ -6,13 +6,17 @@ import (
 	"route256/libs/dbmanager"
 	"route256/libs/kafka"
 	"route256/libs/logger"
+	"route256/libs/tracing"
 	loms "route256/loms/internal/api"
 	"route256/loms/internal/config"
 	"route256/loms/internal/repository/postgres"
 	"route256/loms/internal/service"
 	desc "route256/loms/pkg/loms"
 
+	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -33,7 +37,16 @@ func main() {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	s := grpc.NewServer()
+	tracing.Init(logger.GetLogger(), "loms")
+
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			grpcMiddleware.ChainUnaryServer(
+				otgrpc.OpenTracingServerInterceptor(opentracing.GlobalTracer()),
+				logger.LoggingInterceptor,
+			),
+		),
+	)
 	reflection.Register(s)
 
 	lomsDbUrl := config.ConfigData.LomsDbUrl

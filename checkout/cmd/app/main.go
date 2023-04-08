@@ -16,10 +16,13 @@ import (
 	"route256/libs/dbmanager"
 	"route256/libs/logger"
 	"route256/libs/ratelimiter"
+	"route256/libs/tracing"
 	"time"
 
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -40,9 +43,12 @@ func main() {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
+	tracing.Init(logger.GetLogger(), "checkout")
+
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			grpcMiddleware.ChainUnaryServer(
+				otgrpc.OpenTracingServerInterceptor(opentracing.GlobalTracer()),
 				logger.LoggingInterceptor,
 			),
 		),
