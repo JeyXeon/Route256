@@ -15,11 +15,13 @@ import (
 	"route256/libs/clientconnwrapper"
 	"route256/libs/dbmanager"
 	"route256/libs/logger"
+	"route256/libs/metrics"
 	"route256/libs/ratelimiter"
 	"route256/libs/tracing"
 	"time"
 
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/opentracing/opentracing-go"
@@ -44,16 +46,21 @@ func main() {
 	}
 
 	tracing.Init(logger.GetLogger(), "checkout")
+	metrics.Init()
 
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			grpcMiddleware.ChainUnaryServer(
 				otgrpc.OpenTracingServerInterceptor(opentracing.GlobalTracer()),
+				metrics.ServerMetricsInterceptor,
 				logger.LoggingInterceptor,
 			),
 		),
 	)
 	reflection.Register(s)
+
+	grpc_prometheus.Register(s)
+	go metrics.ServeMetrics(config.ConfigData.MetricsPort, logger.GetLogger())
 
 	checkoutDbUrl := config.ConfigData.CheckoutDbUrl
 	pool, err := pgxpool.Connect(context.Background(), checkoutDbUrl)

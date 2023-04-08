@@ -6,6 +6,7 @@ import (
 	"route256/libs/dbmanager"
 	"route256/libs/kafka"
 	"route256/libs/logger"
+	"route256/libs/metrics"
 	"route256/libs/tracing"
 	loms "route256/loms/internal/api"
 	"route256/loms/internal/config"
@@ -14,6 +15,7 @@ import (
 	desc "route256/loms/pkg/loms"
 
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/opentracing/opentracing-go"
@@ -38,16 +40,21 @@ func main() {
 	}
 
 	tracing.Init(logger.GetLogger(), "loms")
+	metrics.Init()
 
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			grpcMiddleware.ChainUnaryServer(
 				otgrpc.OpenTracingServerInterceptor(opentracing.GlobalTracer()),
+				metrics.ServerMetricsInterceptor,
 				logger.LoggingInterceptor,
 			),
 		),
 	)
 	reflection.Register(s)
+
+	grpc_prometheus.Register(s)
+	go metrics.ServeMetrics(config.ConfigData.MetricsPort, logger.GetLogger())
 
 	lomsDbUrl := config.ConfigData.LomsDbUrl
 	pool, err := pgxpool.Connect(context.Background(), lomsDbUrl)
