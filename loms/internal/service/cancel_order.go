@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"route256/loms/internal/model"
 
 	"github.com/pkg/errors"
@@ -53,7 +52,6 @@ func (s *Service) CancelOrder(ctx context.Context, orderId int64) error {
 		return nil
 	})
 	if err != nil {
-		log.Println(err.Error())
 		return ErrCancellingOrderFailed
 	}
 

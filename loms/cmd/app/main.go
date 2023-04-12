@@ -2,41 +2,64 @@ package main
 
 import (
 	"context"
-	"log"
 	"net"
 	"route256/libs/dbmanager"
 	"route256/libs/kafka"
+	"route256/libs/logger"
+	"route256/libs/metrics"
+	"route256/libs/tracing"
 	loms "route256/loms/internal/api"
 	"route256/loms/internal/config"
 	"route256/loms/internal/repository/postgres"
 	"route256/loms/internal/service"
 	desc "route256/loms/pkg/loms"
 
+	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
+	logger.Init(false)
+
 	err := config.Init()
 	if err != nil {
-		log.Fatal("config init", err)
+		logger.Fatal("config init", zap.Error(err))
 	}
 
 	port := config.ConfigData.Port
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	s := grpc.NewServer()
+	tracing.Init(logger.GetLogger(), "loms")
+	metrics.Init()
+
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			grpcMiddleware.ChainUnaryServer(
+				otgrpc.OpenTracingServerInterceptor(opentracing.GlobalTracer()),
+				metrics.ServerMetricsInterceptor,
+				logger.LoggingInterceptor,
+			),
+		),
+	)
 	reflection.Register(s)
+
+	grpc_prometheus.Register(s)
+	go metrics.ServeMetrics(config.ConfigData.MetricsPort, logger.GetLogger())
 
 	lomsDbUrl := config.ConfigData.LomsDbUrl
 	pool, err := pgxpool.Connect(context.Background(), lomsDbUrl)
 	if err != nil {
-		log.Fatal("db connect", err)
+		logger.Fatal("db connect", zap.Error(err))
 	}
 
 	dbManager := dbmanager.New(pool)
@@ -44,7 +67,7 @@ func main() {
 	brokers := config.ConfigData.Kafka.Brokers
 	kafkaSyncProducer, err := kafka.NewSyncProducer(brokers)
 	if err != nil {
-		log.Fatalln("kafka sync producer", err)
+		logger.Fatal("kafka sync producer", zap.Error(err))
 	}
 
 	reservationsRepository := postgres.NewReservationsRepository(dbManager)
@@ -67,9 +90,9 @@ func main() {
 
 	desc.RegisterLomsServer(s, loms.NewLoms(lomsService))
 
-	log.Printf("server listening at %v", lis.Addr())
+	logger.Info("server listening", zap.Any("address", lis.Addr()))
 
 	if err = s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		logger.Fatal("failed to serve", zap.Error(err))
 	}
 }

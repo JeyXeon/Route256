@@ -2,7 +2,6 @@ package loms
 
 import (
 	"context"
-	"log"
 	desc "route256/loms/pkg/loms"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -18,8 +17,6 @@ func (i *Implementation) OrderPayed(ctx context.Context, req *desc.OrderPayedReq
 	if req.OrderID == 0 {
 		return &empty.Empty{}, ErrOrderPayedEmptyOrder
 	}
-
-	log.Printf("orderPayed: %+v", req)
 
 	err := i.lomsService.PayOrder(ctx, req.OrderID)
 	if err != nil {

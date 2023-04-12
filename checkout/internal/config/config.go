@@ -15,6 +15,7 @@ type Service struct {
 
 type ConfigStruct struct {
 	Port          string `yaml:"port"`
+	MetricsPort   string `yaml:"metricsPort"`
 	CheckoutDbUrl string `yaml:"checkoutDbUrl"`
 	Token         string `yaml:"token"`
 	Services      struct {

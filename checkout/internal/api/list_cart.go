@@ -2,7 +2,6 @@ package checkout
 
 import (
 	"context"
-	"log"
 	"route256/checkout/internal/converters"
 	desc "route256/checkout/pkg/checkout"
 
@@ -18,8 +17,6 @@ func (i *Implementation) ListCart(ctx context.Context, req *desc.ListCartRequest
 	if req.User == 0 {
 		return nil, ErrListCartEmptyUser
 	}
-
-	log.Printf("listCart: %+v", req)
 
 	cart, err := i.checkoutService.ListCart(ctx, req.User)
 	if err != nil {

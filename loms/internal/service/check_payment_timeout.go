@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
-	"log"
+	"route256/libs/logger"
 	"route256/libs/workerpool"
 	"route256/loms/internal/model"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 var (
@@ -30,9 +31,9 @@ func (s *Service) CheckPaymentTimeoutCron(ctx context.Context) {
 		defer wg.Done()
 		for result := range results {
 			if result.Error != nil {
-				log.Println(result.Error.Error())
+				logger.Error("payment timeout check failed", zap.Error(result.Error))
 			} else if result.Result > 0 {
-				log.Printf("cancelled %d timeouted orders", result.Result)
+				logger.Info("cancelled timeouted orders", zap.Int("cancelled", result.Result))
 			}
 		}
 	}()
@@ -89,7 +90,6 @@ func (s *Service) cancelTimeoutedOrders(ctx context.Context, t time.Time) (int, 
 		return nil
 	})
 	if err != nil {
-		log.Println(err.Error())
 		return 0, ErrCancellingOrdersFailed
 	}
 

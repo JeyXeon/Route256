@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
-	"log"
+	"route256/libs/logger"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 func (s *Service) RunRecordCleaner(ctx context.Context) {
@@ -13,7 +15,7 @@ func (s *Service) RunRecordCleaner(ctx context.Context) {
 		case <-ticker.C:
 			err := s.RemoveExpiredMessages(ctx)
 			if err != nil {
-				log.Println(err.Error())
+				logger.Error("records cleaning failed", zap.Error(err))
 			}
 		case <-ctx.Done():
 			ticker.Stop()

@@ -2,7 +2,6 @@ package loms
 
 import (
 	"context"
-	"log"
 	desc "route256/loms/pkg/loms"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -18,8 +17,6 @@ func (i *Implementation) CancelOrder(ctx context.Context, req *desc.CancelOrderR
 	if req.OrderID == 0 {
 		return &empty.Empty{}, ErrCancelOrderEmptyOrder
 	}
-
-	log.Printf("cancelOrder: %+v", req)
 
 	err := i.lomsService.CancelOrder(ctx, req.OrderID)
 	if err != nil {

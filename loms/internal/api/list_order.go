@@ -2,7 +2,6 @@ package loms
 
 import (
 	"context"
-	"log"
 	"route256/loms/internal/converter"
 	desc "route256/loms/pkg/loms"
 
@@ -18,8 +17,6 @@ func (i *Implementation) ListOrder(ctx context.Context, req *desc.ListOrderReque
 	if req.OrderID == 0 {
 		return nil, ErrListOrderEmptyOrder
 	}
-
-	log.Printf("listOrder: %+v", req)
 
 	order, err := i.lomsService.ListOrder(ctx, req.OrderID)
 	if err != nil {

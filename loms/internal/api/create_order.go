@@ -2,7 +2,6 @@ package loms
 
 import (
 	"context"
-	"log"
 	"route256/loms/internal/converter"
 	desc "route256/loms/pkg/loms"
 
@@ -22,8 +21,6 @@ func (i *Implementation) CreateOrder(ctx context.Context, req *desc.CreateOrderR
 	if len(req.Items) == 0 {
 		return nil, ErrCreateOrderEmptyItems
 	}
-
-	log.Printf("createOrder: %+v", req)
 
 	orderItems := converter.LomsApiToOrderItemsListModel(req.Items)
 	orderId, err := i.lomsService.CreateOrder(ctx, req.User, orderItems)

@@ -2,7 +2,6 @@ package checkout
 
 import (
 	"context"
-	"log"
 	desc "route256/checkout/pkg/checkout"
 
 	"google.golang.org/grpc/codes"
@@ -17,8 +16,6 @@ func (i *Implementation) Purchase(ctx context.Context, req *desc.PurchaseRequest
 	if req.User == 0 {
 		return nil, ErrPurchaseEmptyUser
 	}
-
-	log.Printf("purchase: %+v", req)
 
 	order, err := i.checkoutService.Purchase(ctx, req.User)
 	if err != nil {
