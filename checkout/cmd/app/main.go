@@ -49,6 +49,7 @@ func main() {
 
 	tracing.Init(logger.GetLogger(), "checkout")
 	metrics.Init()
+	cache.InitCacheMetrics()
 
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
