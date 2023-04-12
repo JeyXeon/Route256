@@ -10,6 +10,7 @@ type Cache[T any] struct {
 	buckets      []bucket[T]
 }
 
+// New принимает количество бакетов в кэше и время жизни закешированного значения
 func New[T any](ctx context.Context, bucketsCount uint32, ttl time.Duration) *Cache[T] {
 	var c Cache[T]
 
@@ -19,12 +20,14 @@ func New[T any](ctx context.Context, bucketsCount uint32, ttl time.Duration) *Ca
 		c.buckets[i].init(ttl)
 	}
 
+	// Запускается фоновая джоба, которая раз в n секунд пробегается по кешу и чистит протухшие значения
 	go c.refreshCron(ctx)
 
 	return &c
 }
 
 func (c *Cache[T]) Set(key uint32, value T) {
+	// Не стал заморачиваться с хэш функцией, так как сделал примитивную реализацию с фиксированным типом ключа
 	idx := key % c.bucketsCount
 	c.buckets[idx].set(key, value)
 }

@@ -87,13 +87,15 @@ func (m *Service) prepareGetProductTasks(cartItems []*model.CartItem) []workerpo
 }
 
 func (m *Service) getProduct(ctx context.Context, sku uint32) (*model.Product, error) {
-	product, exists := m.productServiceCache.Get(sku)
-	if exists {
-		return product, nil
+	if m.productServiceCache != nil {
+		product, exists := m.productServiceCache.Get(sku)
+		if exists {
+			return product, nil
+		}
 	}
 
 	product, err := m.productServiceClient.GetProduct(ctx, sku)
-	if err == nil {
+	if m.productServiceCache != nil && err == nil {
 		m.productServiceCache.Set(sku, *product)
 	}
 

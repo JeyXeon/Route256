@@ -234,6 +234,7 @@ func TestListCart(t *testing.T) {
 				nil,
 				testCase.productServiceClientMock(mc),
 				testCase.limiterMock(mc),
+				nil,
 			))
 
 			res, err := api.ListCart(testCase.args.ctx, testCase.args.req)

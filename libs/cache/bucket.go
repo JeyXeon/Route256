@@ -11,6 +11,7 @@ type chunk[T any] struct {
 	createdAt time.Time
 }
 
+// bucket содержит в себе rw мьютекс, чтобы блок происходил не на операции кэша целиком, а на конкретном бакете
 type bucket[T any] struct {
 	mu     sync.RWMutex
 	chunks []*chunk[T]
@@ -27,10 +28,13 @@ func (b *bucket[T]) get(key uint32) (value *T, exists bool) {
 	b.mu.RLock()
 
 	for _, v := range b.chunks {
+		// Если в бакете находится непротухший чанк с соответствующим ключом, возвращается хранимое в нем значение
 		if v.key == key && v.createdAt.Add(b.ttl).After(time.Now()) {
+			value = v.value
+
 			b.mu.RUnlock()
 
-			return v.value, true
+			return value, true
 		}
 	}
 	b.mu.RUnlock()
@@ -60,6 +64,8 @@ func (b *bucket[T]) set(key uint32, value T) {
 	b.mu.Unlock()
 }
 
+// Метод для очищающей протухшие значения фоновой джобы, происходит обход чанков, все непротухшийе складываются в новый список,
+// когда обход заканчивается список чанков заменяется на полученный список
 func (b *bucket[T]) refresh() {
 	b.mu.Lock()
 	refreshedChunks := make([]*chunk[T], 0, len(b.chunks))
