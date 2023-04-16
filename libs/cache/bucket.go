@@ -26,31 +26,27 @@ func (b *bucket[T]) init(ttl time.Duration) {
 
 func (b *bucket[T]) get(key uint32) (value *T, exists bool) {
 	b.mu.RLock()
+	defer b.mu.RUnlock()
 
 	for _, v := range b.chunks {
 		// Если в бакете находится непротухший чанк с соответствующим ключом, возвращается хранимое в нем значение
 		if v.key == key && v.createdAt.Add(b.ttl).After(time.Now()) {
 			value = v.value
-
-			b.mu.RUnlock()
-
 			return value, true
 		}
 	}
-	b.mu.RUnlock()
 
 	return nil, false
 }
 
 func (b *bucket[T]) set(key uint32, value T) {
 	b.mu.Lock()
+	defer b.mu.Unlock()
 
 	for _, v := range b.chunks {
 		if key == v.key {
 			v.value = &value
 			v.createdAt = time.Now()
-
-			b.mu.Unlock()
 			return
 		}
 	}
@@ -60,14 +56,14 @@ func (b *bucket[T]) set(key uint32, value T) {
 		value:     &value,
 		createdAt: time.Now(),
 	})
-
-	b.mu.Unlock()
 }
 
 // Метод для очищающей протухшие значения фоновой джобы, происходит обход чанков, все непротухшийе складываются в новый список,
 // когда обход заканчивается список чанков заменяется на полученный список
 func (b *bucket[T]) refresh() {
 	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	refreshedChunks := make([]*chunk[T], 0, len(b.chunks))
 	for _, v := range b.chunks {
 		if !v.createdAt.Add(b.ttl).After(time.Now()) {
@@ -76,5 +72,4 @@ func (b *bucket[T]) refresh() {
 	}
 
 	b.chunks = refreshedChunks
-	b.mu.Unlock()
 }
