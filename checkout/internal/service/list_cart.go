@@ -71,7 +71,7 @@ func (m *Service) prepareGetProductTasks(cartItems []*model.CartItem) []workerpo
 			return nil, err
 		}
 
-		return m.productServiceClient.GetProduct(ctx, sku)
+		return m.getProduct(ctx, sku)
 	}
 
 	// Генерируем по таске для каждого sku в корзине
@@ -84,4 +84,20 @@ func (m *Service) prepareGetProductTasks(cartItems []*model.CartItem) []workerpo
 	}
 
 	return tasks
+}
+
+func (m *Service) getProduct(ctx context.Context, sku uint32) (*model.Product, error) {
+	if m.productServiceCache != nil {
+		product, exists := m.productServiceCache.Get(sku)
+		if exists {
+			return product, nil
+		}
+	}
+
+	product, err := m.productServiceClient.GetProduct(ctx, sku)
+	if m.productServiceCache != nil && err == nil {
+		m.productServiceCache.Set(sku, *product)
+	}
+
+	return product, err
 }

@@ -17,20 +17,19 @@ var (
 )
 
 func Init() {
-	reg := prometheus.NewRegistry()
-	ServerRequestsCounter = promauto.With(reg).NewCounter(prometheus.CounterOpts{
+	ServerRequestsCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: "route256",
 		Subsystem: "grpc",
 		Name:      "server_requests_total",
 	})
-	ServerResponseCounter = promauto.With(reg).NewCounterVec(prometheus.CounterOpts{
+	ServerResponseCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "route256",
 		Subsystem: "grpc",
 		Name:      "server_responses_total",
 	},
 		[]string{"status"},
 	)
-	ServerHistogramResponseTime = promauto.With(reg).NewHistogramVec(prometheus.HistogramOpts{
+	ServerHistogramResponseTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "route256",
 		Subsystem: "grpc",
 		Name:      "server_histogram_response_time_seconds",
@@ -38,7 +37,7 @@ func Init() {
 	},
 		[]string{"status"},
 	)
-	ClientHistogramResponseTime = promauto.With(reg).NewHistogramVec(prometheus.HistogramOpts{
+	ClientHistogramResponseTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "route256",
 		Subsystem: "grpc",
 		Name:      "client_histogram_response_time_seconds",

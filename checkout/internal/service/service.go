@@ -30,12 +30,18 @@ type ProductServiceClient interface {
 	GetProduct(ctx context.Context, sku uint32) (*model.Product, error)
 }
 
+type ProductServiceCache interface {
+	Get(sku uint32) (*model.Product, bool)
+	Set(sku uint32, product model.Product)
+}
+
 type Service struct {
 	transactionManager    TransactionManager
 	itemsRepository       ItemRepository
 	lomsClient            LomsClient
 	productServiceClient  ProductServiceClient
 	productServiceLimiter Limiter
+	productServiceCache   ProductServiceCache
 }
 
 func New(
@@ -44,6 +50,7 @@ func New(
 	stocksChecker LomsClient,
 	productServiceClient ProductServiceClient,
 	productServiceLimiter Limiter,
+	productServiceCache ProductServiceCache,
 ) *Service {
 	return &Service{
 		transactionManager:    transactionManager,
@@ -51,5 +58,6 @@ func New(
 		lomsClient:            stocksChecker,
 		productServiceClient:  productServiceClient,
 		productServiceLimiter: productServiceLimiter,
+		productServiceCache:   productServiceCache,
 	}
 }

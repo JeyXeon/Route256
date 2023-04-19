@@ -7,11 +7,13 @@ import (
 	"route256/checkout/internal/clients/loms"
 	"route256/checkout/internal/clients/productservice"
 	"route256/checkout/internal/config"
+	"route256/checkout/internal/model"
 	"route256/checkout/internal/repository/postgres"
 	"route256/checkout/internal/service"
 	desc "route256/checkout/pkg/checkout"
 	lomsapi "route256/checkout/pkg/loms"
 	productserviceapi "route256/checkout/pkg/productservice"
+	"route256/libs/cache"
 	"route256/libs/clientconnwrapper"
 	"route256/libs/dbmanager"
 	"route256/libs/logger"
@@ -47,6 +49,7 @@ func main() {
 
 	tracing.Init(logger.GetLogger(), "checkout")
 	metrics.Init()
+	cache.InitCacheMetrics()
 
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
@@ -95,12 +98,15 @@ func main() {
 		productServiceTokens,
 	)
 
+	productServiceCache := cache.New[model.Product](context.Background(), 512, 5*time.Second)
+
 	checkoutService := service.New(
 		dbManager,
 		orderItemRepository,
 		lomsClient,
 		productServiceClient,
 		productServiceLimiter,
+		productServiceCache,
 	)
 
 	desc.RegisterCheckoutServer(s, checkout.NewCheckout(checkoutService))

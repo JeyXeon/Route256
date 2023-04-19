@@ -166,6 +166,7 @@ func TestPurchase(t *testing.T) {
 				testCase.lomsClientMock(mc),
 				nil,
 				nil,
+				nil,
 			))
 
 			res, err := api.Purchase(testCase.args.ctx, testCase.args.req)
